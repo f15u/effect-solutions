@@ -5,9 +5,11 @@ order: 1
 
 # Repo Setup
 
+For a well-configured Effect repository, install the Effect Language Service and configure TypeScript for optimal development experience.
+
 ## Effect Language Service
 
-Install Effect Language Service for editor diagnostics and compile-time type checking.
+The Effect Language Service provides editor diagnostics and compile-time type checking. This guide covers installation and setup.
 
 ### Installation
 
@@ -30,6 +32,8 @@ Add the plugin to `tsconfig.json`:
 ```
 
 ### VS Code Setup
+
+For VS Code or any VS Code fork (Cursor, etc.):
 
 1. Press F1 → "TypeScript: Select TypeScript version"
 2. Choose "Use workspace version"
@@ -66,7 +70,7 @@ Add to `package.json` to persist across installs:
 
 Effect projects benefit from strict TypeScript configuration for safety and performance.
 
-**See:** [TypeScript Configuration Guide](./tsconfig.md)
+**See:** [TypeScript Configuration Guide](./02-tsconfig.md)
 
 Reference configuration from Effect v4:
 [effect-smol tsconfig.base.jsonc](https://github.com/Effect-TS/effect-smol/blob/main/tsconfig.base.jsonc)
