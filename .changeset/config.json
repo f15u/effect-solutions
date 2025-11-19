@@ -3,7 +3,7 @@
   "changelog": [
     "@changesets/changelog-github",
     {
-      "repo": "kitlangton/effect-best-practices"
+      "repo": "kitlangton/effect-solutions"
     }
   ],
   "commit": false,
