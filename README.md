@@ -1,7 +1,7 @@
 # Effect Solutions
 
 Monorepo for the Effect Solutions reference site (Next.js 16) and the
-`effect-solutions` CLI/Claude skill installer.
+`effect-solutions` docs CLI that agents/humans can run via `bunx effect-solutions`.
 
 ## Requirements
 
@@ -13,7 +13,7 @@ Monorepo for the Effect Solutions reference site (Next.js 16) and the
 | Path | Description |
 | --- | --- |
 | `packages/website` | Next.js site that renders the Effect Solutions docs |
-| `packages/cli` | Bun-based `effect-solutions` installer/skill exporter |
+| `packages/cli` | Bun-based `effect-solutions` documentation CLI |
 | `.github/workflows/` | Automation (Validate Documentation, Claude responders) |
 
 The root `bun.lock` tracks dependencies for all workspaces.
@@ -38,10 +38,16 @@ bun run typecheck  # standalone tsc --build --force
 bun run format     # biome format --write
 ```
 
+## Effect Solutions CLI
+
+- Run `bunx effect-solutions` in this repo to see the shared human/agent greeting.
+- `bunx effect-solutions list` shows topic IDs; `bunx effect-solutions show <id...>` prints LM-friendly packets you can paste into conversations or follow directly in the terminal.
+- Add new topic markdown under `packages/cli/resources/topics/` (front matter with `title` + `summary` required) and rerun `bun test packages/cli/src/cli.test.ts` to ensure parsing stays in sync.
+
 ## Automation
 
 The `Validate Documentation` GitHub Action (`.github/workflows/validate-docs.yml`) uses Claude Code to compare local references against their upstream sources each night. Keep local docs accurate so the workflow stays green.
 
 ## Updating references
 
-Add new docs under `packages/website/references/`. The `effect-solutions` CLI packages any `*.md`/`*.mdx` file automatically during its build, so no manual manifests are necessary.
+Add new docs under `packages/website/references/`. The `effect-solutions` CLI reads its own topic markdown from `packages/cli/resources/`, so there’s no auto-generated manifest anymore—just edit the markdown directly.

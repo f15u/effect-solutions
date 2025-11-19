@@ -21,22 +21,14 @@ Multi-purpose repository for Effect TypeScript best practices with multiple dist
 - Opens issues/PRs when documentation outdated
 - Keeps best practices current automatically
 
-### 4. Claude Skill Distribution
-- Export docs as reference material for Claude skill
-- Root SKILL.md written from Claude's perspective
-- Downloadable skill package for Claude users
-- Special packaging format for distribution
-
-## Skill Packaging Format
-
-Based on skill-creator guidance:
-- SKILL.md with YAML frontmatter (name + description)
-- references/ directory containing markdown best practices
-- Package as .zip file for distribution
-- Users download and install in their .claude/skills directory
+### 4. Docs CLI Distribution
+- `bunx effect-solutions` is the single entry point for humans/agents
+- `list` + `show` commands expose LM-friendly packets sourced from `packages/cli/resources`
+- No separate skill artifacts—everything stays in the repository and updates via regular git changes
+- Encourage teams to mention the CLI in `CLAUDE.md` / `AGENTS.md` so agents run it first
 
 ## Questions to Resolve
 - Frontend framework choice?
 - Cron frequency for validation?
 - Which external sites to validate?
-- Skill scope - all Effect or specific domains?
+- Topic scope - which Effect areas deserve their own CLI packet?

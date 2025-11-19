@@ -1,67 +1,87 @@
 #!/usr/bin/env bun
 
 import { BunContext, BunRuntime } from "@effect/platform-bun";
-import { FileSystem, Path } from "@effect/platform";
-import { Console, Effect } from "effect";
-import { Command, Options } from "@effect/cli";
-import {
-  REFERENCE_CONTENT,
-  REFERENCE_FILES,
-  SKILL_DOCUMENT,
-} from "./reference-manifest";
+import { Console, Effect, pipe } from "effect";
+import { Args, Command } from "@effect/cli";
+import { ENTRY, TOPIC_LOOKUP, TOPICS } from "./docs-manifest";
 
 const CLI_NAME = "effect-solutions";
-const CLI_VERSION = "0.1.0";
+const CLI_VERSION = "0.2.0";
 
-const SKILL_ID = "effect-solutions";
+const isTopicId = (value: string): value is keyof typeof TOPIC_LOOKUP =>
+  value in TOPIC_LOOKUP;
 
-const installSkill = (global: boolean) =>
-  Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem;
-    const path = yield* Path.Path;
+export const renderEntryDocument = () => `${ENTRY}\n`;
 
-    const skillName = SKILL_ID;
-    const homeDir = yield* Effect.promise(() => import("node:os")).pipe(
-      Effect.map((os) => os.homedir()),
-    );
+const formatRow = (idWidth: number, titleWidth: number) =>
+  (id: string, title: string, summary: string) =>
+    `${id.padEnd(idWidth)}  ${title.padEnd(titleWidth)}  ${summary}`;
 
-    const targetDir = global
-      ? path.join(homeDir, ".claude", "skills", skillName)
-      : path.join(path.join(process.cwd()), ".claude", "skills", skillName);
+export const renderTopicList = () => {
+  const idWidth = Math.max("ID".length, ...TOPICS.map((topic) => topic.id.length));
+  const titleWidth = Math.max(
+    "Title".length,
+    ...TOPICS.map((topic) => topic.title.length),
+  );
 
-    yield* Console.log(`Installing Effect Solutions skill to ${targetDir}...`);
+  const format = formatRow(idWidth, titleWidth);
+  const header = format("ID", "Title", "Summary");
+  const separator = `${"-".repeat(idWidth)}  ${"-".repeat(titleWidth)}  ${"-".repeat(20)}`;
 
-    // Create directories
-    yield* fs.makeDirectory(path.join(targetDir, "references"), {
-      recursive: true,
-    });
+  const lines = [header, separator, ...TOPICS.map((topic) =>
+    format(topic.id, topic.title, topic.summary))];
 
-    // Write SKILL.md locally bundled in the CLI
-    yield* fs.writeFileString(path.join(targetDir, "SKILL.md"), SKILL_DOCUMENT);
+  return `${lines.join("\n")}\n`;
+};
 
-    for (const ref of REFERENCE_FILES) {
-      const destination = path.join(targetDir, "references", ref);
-      yield* fs.makeDirectory(path.dirname(destination), { recursive: true });
-      yield* fs.writeFileString(destination, REFERENCE_CONTENT[ref]);
-    }
+export const renderTopics = (requested: ReadonlyArray<string>) => {
+  const ids = requested.map((id) => id.trim()).filter(Boolean);
 
-    yield* Console.log("✓ Effect Solutions skill installed successfully!");
-    yield* Console.log("\nRestart Claude Code to activate the skill.");
+  if (ids.length === 0) {
+    throw new Error("Please provide at least one topic id.");
+  }
+
+  const unknown = ids.filter((id) => !isTopicId(id));
+  if (unknown.length > 0) {
+    throw new Error(`Unknown topic id(s): ${unknown.join(", ")}`);
+  }
+
+  const uniqueIds = Array.from(new Set(ids));
+  const blocks = uniqueIds.map((id) => {
+    const topic = TOPIC_LOOKUP[id];
+    return [`## ${topic.title} (${topic.id})`, "", topic.body.trim()]
+      .filter(Boolean)
+      .join("\n");
   });
 
-const globalOption = Options.boolean("global").pipe(
-  Options.withAlias("g"),
-  Options.withDescription("Install globally to ~/.claude/skills/"),
+  return `${blocks.join("\n\n---\n\n")}\n`;
+};
+
+const printEntryDocument = Console.log(renderEntryDocument());
+
+const listTopics = Console.log(renderTopicList());
+
+const showTopics = (topics: ReadonlyArray<string>) =>
+  Effect.try({
+    try: () => renderTopics(topics),
+  }).pipe(Effect.flatMap((output) => Console.log(output)));
+
+const listCommand = Command.make("list").pipe(
+  Command.withDescription("List Effect Solutions documentation topics"),
+  Command.withHandler(() => listTopics),
 );
 
-const installCommand = Command.make("install", { global: globalOption }).pipe(
-  Command.withHandler(({ global }) => installSkill(global)),
-  Command.withDescription("Install the Effect Solutions skill"),
+const showCommand = Command.make("show", {
+  topics: Args.text({ name: "topic-id" }).pipe(Args.atLeast(1)),
+}).pipe(
+  Command.withDescription("Show one or more Effect Solutions topics"),
+  Command.withHandler(({ topics }) => showTopics(topics)),
 );
 
 export const cli = Command.make(CLI_NAME).pipe(
-  Command.withSubcommands([installCommand]),
   Command.withDescription("Effect Solutions CLI"),
+  Command.withHandler(() => printEntryDocument),
+  Command.withSubcommands([listCommand, showCommand]),
 );
 
 export const runCli = (argv: ReadonlyArray<string>) =>
@@ -71,7 +91,8 @@ export const runCli = (argv: ReadonlyArray<string>) =>
   })(argv);
 
 if (import.meta.main) {
-  runCli(process.argv).pipe(
+  pipe(
+    runCli(process.argv),
     Effect.provide(BunContext.layer),
     BunRuntime.runMain,
   );

@@ -5,8 +5,14 @@ This Bun workspace powers the Effect Solutions documentation site and installer.
 ## Project Structure
 
 - `packages/website/` - Next.js 16 documentation site
-- `packages/cli/` - `effect-solutions` CLI/Claude skill installer
-- `.github/workflows/` - Validate Documentation & Claude automation
+- `packages/cli/` - `effect-solutions` docs CLI (run `bunx effect-solutions`)
+- `.github/workflows/` - Validate documentation & automation bots
+
+## Effect Solutions CLI
+
+- Run `bunx effect-solutions` inside any Effect repo for the shared greeting.
+- Use `bunx effect-solutions list` to see topic IDs and `bunx effect-solutions show <id...>` to stream the packets you need.
+- Mention this CLI in `CLAUDE.md`/`AGENTS.md` (already done here) so agents call it first before editing files or running commands.
 
 ## Living Documentation
 
