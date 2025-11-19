@@ -9,6 +9,7 @@ interface ReferenceListProps {
     slug: string;
     title: string;
     description?: string;
+    draft?: boolean;
   }>;
 }
 
@@ -52,6 +53,11 @@ export function ReferenceList({ references }: ReferenceListProps) {
                 <h2 className="text-[1.05rem] font-semibold uppercase leading-snug text-neutral-100">
                   {reference.title}
                 </h2>
+                {reference.draft && (
+                  <span className="px-2 py-0.5 text-xs font-medium uppercase tracking-wide bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">
+                    Draft
+                  </span>
+                )}
               </div>
 
               {reference.description && (

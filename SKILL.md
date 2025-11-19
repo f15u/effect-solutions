@@ -20,16 +20,22 @@ Use this skill when:
 
 ### Reference Documentation
 
-The CLI packages the entire `packages/website/references/` tree, so every markdown file ships with the skill:
+The CLI packages the entire `packages/website/references/` tree, so every markdown file ships with the skill. This table is generated automatically—run `node scripts/update-reference-manifest.mjs` after adding or renaming references.
 
-- **00-index.md** – Overview and quick reference
-- **01-repo-setup.md** – Effect Language Service + project bootstrap
-- **02-tsconfig.md** – TypeScript configuration aligned with Effect
-- **03-services-and-layers.md** – Dependency injection patterns
-- **04-effect-style.md** – Coding conventions (`Effect.fn`, `Effect.gen`, imports)
-- **05-data-types.md** – Schemas, unions, branded IDs, JSON interoperability
-- **06-error-handling.md** – Tagged errors, matching, defects
-- **07-config.md** – Using `Config` + layers for application settings
+<!-- SKILL_TABLE_START -->
+
+| Reference | Summary |
+| --- | --- |
+| **Overview** (`references/00-index.md`) | Map of all Effect Solutions references with quick links |
+| **Repo Setup** (`references/01-repo-setup.md`) | Install the Effect Language Service and strict project defaults |
+| **TypeScript Config** (`references/02-tsconfig.md`) | Recommended TypeScript compiler settings tuned for Effect |
+| **Services & Layers** (`references/03-services-and-layers.md`) | Context.Tag and Layer patterns for dependency injection |
+| **Effect Style** (`references/04-effect-style.md`) | Coding conventions for Effect.fn, Effect.gen, and imports |
+| **Data Types** (`references/05-data-types.md`) | Schema classes, unions, brands, and JSON serialization |
+| **Error Handling** (`references/06-error-handling.md`) | Schema.TaggedError modeling, pattern matching, and defects |
+| **Configuration** (`references/07-config.md`) | Effect Config usage, providers, and Live/Test layers |
+
+<!-- SKILL_TABLE_END -->
 
 ### Workflow
 

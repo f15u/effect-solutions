@@ -1,5 +1,6 @@
 ---
 title: Effect Style
+description: "Coding conventions for Effect.fn, Effect.gen, and imports"
 order: 4
 ---
 

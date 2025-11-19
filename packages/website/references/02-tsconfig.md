@@ -1,5 +1,6 @@
 ---
 title: TypeScript Config
+description: "Recommended TypeScript compiler settings tuned for Effect"
 order: 2
 ---
 
@@ -89,3 +90,12 @@ Enables Effect language service for diagnostics and transforms.
 2. **Safety** - Maximum type checking without escape hatches
 3. **Modern** - ESM-first, works with Node.js native modules
 4. **DX** - Source maps, declaration maps, Effect diagnostics
+
+## TODO
+
+- Document different tsconfig settings for:
+  - Libraries (published to npm)
+  - Vite apps (bundled)
+  - Node apps (unbundled)
+- Cover bundler vs non-bundler specific settings
+- `moduleResolution`, `module`, and `target` differences

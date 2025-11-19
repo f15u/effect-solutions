@@ -114,7 +114,7 @@ export function LessonHeader({
     playHoverSfx();
   }, [playHoverSfx]);
 
-  let displayTitle = "EFFECT INSTITUTE";
+  let displayTitle = "EFFECT SOLUTIONS";
 
   const isLessonsPage = pathname === "/lessons";
 

@@ -17,9 +17,9 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const siteName = "Effect Institute";
+const siteName = "Effect Solutions";
 const siteDescription =
-  "Effect Institute publishes hands-on lessons for building resilient TypeScript applications with Effect.";
+  "Effect Solutions provides best practices and patterns for building resilient TypeScript applications with Effect.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -29,12 +29,13 @@ export const metadata: Metadata = {
   },
   description: siteDescription,
   keywords: [
-    "Effect Institute",
+    "Effect Solutions",
     "Effect",
     "TypeScript",
     "Functional Programming",
     "Resilient Systems",
     "Error Handling",
+    "Best Practices",
   ],
   openGraph: {
     title: siteName,

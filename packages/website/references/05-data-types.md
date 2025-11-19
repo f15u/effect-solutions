@@ -1,5 +1,6 @@
 ---
 title: Data Types
+description: "Schema classes, unions, brands, and JSON serialization"
 order: 5
 ---
 
@@ -69,20 +70,28 @@ export class Failure extends Schema.TaggedClass<Failure>()("Failure", {
 export const Result = Schema.Union(Success, Failure)
 export type Result = typeof Result.Type
 
-// Pattern match with Match.tag
-const handleResult = (result: Result) =>
+// Pattern 1: Match.value - inline matching
+const handleResultInline = (result: Result) =>
   Match.value(result).pipe(
     Match.tag("Success", ({ value }) => `Got: ${value}`),
     Match.tag("Failure", ({ error }) => `Error: ${error}`),
     Match.exhaustive
   )
 
-// Alternative: Use Match.tags for multiple tags at once
-const isOk = (result: Result) =>
-  Match.value(result).pipe(
-    Match.tag("Success", () => true),
-    Match.orElse(() => false)
-  )
+// Pattern 2: Match.type - extract matcher (compiled once, better perf)
+const matcher = Match.type<Result>().pipe(
+  Match.tag("Success", ({ value }) => `Got: ${value}`),
+  Match.tag("Failure", ({ error }) => `Error: ${error}`),
+  Match.exhaustive
+)
+
+const handleResult = (result: Result) => matcher(result)
+
+// Pattern 3: Match.tags - handle multiple tags together
+const isOk = Match.type<Result>().pipe(
+  Match.tag("Success", () => true),
+  Match.orElse(() => false)
+)
 
 // Usage - TaggedClass uses constructor, not .make()
 const success = new Success({ value: 42 })
@@ -90,6 +99,8 @@ const failure = new Failure({ error: "oops" })
 
 handleResult(success) // "Got: 42"
 handleResult(failure) // "Error: oops"
+isOk(success) // true
+isOk(failure) // false
 ```
 
 **Benefits:**
@@ -100,27 +111,53 @@ handleResult(failure) // "Error: oops"
 
 ## Branded Types
 
-Use branded types to prevent mixing values that have the same underlying type. Especially useful for IDs that would otherwise be interchangeable.
+Use branded types to prevent mixing values that have the same underlying type. **In a well-designed domain model, nearly all primitives should be branded** - not just IDs, but emails, URLs, timestamps, slugs, counts, percentages, and any value with semantic meaning.
 
 ```typescript
 import { Schema } from "effect"
 
-// Define branded ID types
+// IDs - prevent mixing different entity IDs
 export const UserId = Schema.String.pipe(Schema.brand("UserId"))
 export type UserId = typeof UserId.Type
 
 export const PostId = Schema.String.pipe(Schema.brand("PostId"))
 export type PostId = typeof PostId.Type
 
-// Usage - type safe, can't mix IDs
+// Domain primitives - create a rich type system
+export const Email = Schema.String.pipe(Schema.brand("Email"))
+export type Email = typeof Email.Type
+
+export const Slug = Schema.String.pipe(Schema.brand("Slug"))
+export type Slug = typeof Slug.Type
+
+export const Timestamp = Schema.Number.pipe(Schema.brand("Timestamp"))
+export type Timestamp = typeof Timestamp.Type
+
+export const Count = Schema.Number.pipe(Schema.brand("Count"))
+export type Count = typeof Count.Type
+
+// Usage - impossible to mix types
 const userId = UserId.make("user-123")
 const postId = PostId.make("post-456")
+const email = Email.make("alice@example.com")
+const slug = Slug.make("hello-world")
 
 function getUser(id: UserId) { return id }
+function sendEmail(to: Email) { return to }
 
-// ❌ This won't compile - can't pass PostId where UserId expected
-// getUser(postId) // Type error
+// ❌ All of these produce type errors
+// getUser(postId) // Can't pass PostId where UserId expected
+// sendEmail(slug) // Can't pass Slug where Email expected
+// const bad: UserId = "raw-string" // Can't assign raw string to branded type
 ```
+
+**Why brand everything?**
+
+- Prevents subtle bugs (passing email where username expected)
+- Self-documenting code (function signatures reveal intent)
+- Validation at boundaries (Schema.decode enforces rules once)
+- Refactoring safety (rename `Email` → `EmailAddress` catches all uses)
+- Beautiful domain model (types match business concepts)
 
 ## Pattern Summary
 

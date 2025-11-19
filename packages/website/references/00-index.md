@@ -1,5 +1,6 @@
 ---
 title: Overview
+description: "Map of all Effect Solutions references with quick links"
 order: 0
 ---
 
@@ -16,3 +17,10 @@ Effect Solutions collects best practices and patterns for building applications 
 - **[Data Types](/references/05-data-types)** - Branded types, schemas, and IDs
 - **[Error Handling](/references/06-error-handling)** - TaggedError, Cause, and pattern matching
 - **[Configuration](/references/07-config)** - Application configuration using `Config`
+
+<DraftNote>
+
+- **[Project Structure](/references/08-project-structure)** - Folder organization patterns
+- **[Incremental Adoption](/references/09-incremental-adoption)** - Gradually introducing Effect to existing codebases
+
+</DraftNote>

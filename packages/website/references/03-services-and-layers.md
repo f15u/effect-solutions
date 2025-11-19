@@ -1,5 +1,6 @@
 ---
 title: Services & Layers
+description: "Context.Tag and Layer patterns for dependency injection"
 order: 3
 ---
 
@@ -11,40 +12,139 @@ These are best practices to follow when building services and layers.
 
 ## Layer Composition
 
-Put live implementations as static properties using **PascalCase** and `.of()` for clarity:
+Put layer implementations as static properties using **camelCase** and `.of()` for clarity.
+
+**Tag identifiers must be fully unique** - use a path-like prefix (e.g., `@app/ServiceName` or `app/ServiceName`) to avoid collisions across your application:
 
 ```typescript
 import { Context, Effect, Layer } from "effect"
 
-class SomeDependency extends Context.Tag("SomeDependency")<
-  SomeDependency,
-  { readonly value: string }
->() {}
+// Config service - use fully qualified identifier
+class AppConfig extends Context.Tag("@app/AppConfig")<
+  AppConfig,
+  { readonly apiUrl: string; readonly timeout: number }
+>() {
+  static readonly layer = Layer.succeed(
+    AppConfig,
+    AppConfig.of({
+      apiUrl: "https://api.example.com",
+      timeout: 5000
+    })
+  )
+}
 
-export class MyService extends Context.Tag("MyService")<
-  MyService,
+// Service that depends on config
+export class ApiClient extends Context.Tag("@app/ApiClient")<
+  ApiClient,
   {
-    readonly doSomething: () => Effect.Effect<void>
+    readonly fetch: (path: string) => Effect.Effect<string>
   }
 >() {
-  static readonly Live = Layer.effect(
-    MyService,
+  static readonly layer = Layer.effect(
+    ApiClient,
     Effect.gen(function* () {
-      const dep = yield* SomeDependency
+      const config = yield* AppConfig
 
-      return MyService.of({
-        doSomething: () => Effect.void,
+      return ApiClient.of({
+        fetch: (path) => Effect.gen(function* () {
+          const url = `${config.apiUrl}${path}`
+          yield* Effect.log(`Fetching ${url} (timeout: ${config.timeout}ms)`)
+          return `Response from ${url}`
+        })
       })
     })
   )
 }
 
+// Combine layers
+const mainLayer = ApiClient.layer.pipe(
+  Layer.provide(AppConfig.layer)
+)
+
 // Usage
-const layer = MyService.Live
+const program = Effect.gen(function* () {
+  const client = yield* ApiClient
+  const result = yield* client.fetch("/users")
+  yield* Effect.log(result)
+})
+
+const main = program.pipe(Effect.provide(mainLayer))
 ```
 
 **Naming conventions:**
-- Use `Live` for production implementations
-- Use `Test` for test doubles
-- Use `Mock` for mock implementations
+- Tag identifiers: `@app/ServiceName` or `app/module/ServiceName` for uniqueness
+- Use `layer` for production layer implementations (lowercase)
+- Use `test` for test layer doubles (lowercase)
+- Use `mock` for mock layer implementations (lowercase)
 - Always use `.of()` to make it clear what service you're constructing
+
+## Tags Without Implementations
+
+You can define service tags without implementations - useful for exploration, prototyping, or when coordinating multiple services:
+
+```typescript
+import { Context, Effect } from "effect"
+
+// Define service interfaces without implementations
+class Database extends Context.Tag("@app/Database")<
+  Database,
+  {
+    readonly query: (sql: string) => Effect.Effect<unknown[]>
+    readonly execute: (sql: string) => Effect.Effect<void>
+  }
+>() {}
+
+class Cache extends Context.Tag("@app/Cache")<
+  Cache,
+  {
+    readonly get: (key: string) => Effect.Effect<string | null>
+    readonly set: (key: string, value: string) => Effect.Effect<void>
+  }
+>() {}
+
+class Logger extends Context.Tag("@app/Logger")<
+  Logger,
+  {
+    readonly log: (message: string) => Effect.Effect<void>
+  }
+>() {}
+
+// Coordinator service uses the tags directly
+class UserService extends Context.Tag("@app/UserService")<
+  UserService,
+  {
+    readonly getUser: (id: string) => Effect.Effect<unknown>
+  }
+>() {
+  static readonly layer = Layer.effect(
+    UserService,
+    Effect.gen(function* () {
+      const db = yield* Database
+      const cache = yield* Cache
+      const logger = yield* Logger
+
+      return UserService.of({
+        getUser: (id) => Effect.gen(function* () {
+          yield* logger.log(`Fetching user ${id}`)
+          const cached = yield* cache.get(`user:${id}`)
+          if (cached) return JSON.parse(cached)
+
+          const result = yield* db.query(`SELECT * FROM users WHERE id = ?`)
+          return result[0]
+        })
+      })
+    })
+  )
+}
+
+// Add implementations later when ready
+// Database.layer = ...
+// Cache.layer = ...
+// Logger.layer = ...
+```
+
+**Benefits:**
+- Design service contracts first, implementations later
+- Explore coordination logic without concrete dependencies
+- TypeScript validates service usage across your app
+- Easy to add mock/test implementations without changing consumers

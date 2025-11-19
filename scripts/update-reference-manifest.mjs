@@ -16,6 +16,9 @@ const manifestPath = path.join(
 const manifestDir = path.dirname(manifestPath);
 const skillPath = path.join(rootDir, "SKILL.md");
 
+const SKILL_TABLE_START = "<!-- SKILL_TABLE_START -->";
+const SKILL_TABLE_END = "<!-- SKILL_TABLE_END -->";
+
 async function collectMarkdownFiles(dir, prefix = "") {
   const entries = await fs.readdir(dir, { withFileTypes: true });
   const files = [];
@@ -42,6 +45,49 @@ const toIdentifier = (fileName) => {
   return `REF_${base || "FILE"}`;
 };
 
+const FRONT_MATTER_REGEX = /^---\n([\s\S]*?)\n---/;
+
+function parseFrontMatter(source) {
+  const match = source.match(FRONT_MATTER_REGEX);
+  if (!match) {
+    return {};
+  }
+
+  const lines = match[1].split(/\r?\n/);
+  return lines.reduce((acc, line) => {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) {
+      return acc;
+    }
+    const [key, ...rest] = trimmed.split(":");
+    if (!key || rest.length === 0) {
+      return acc;
+    }
+    const value = rest.join(":").trim();
+    acc[key.trim()] = value.replace(/^"|"$/g, "");
+    return acc;
+  }, {});
+}
+
+const escapeMarkdown = (value) =>
+  value
+    .replace(/\|/g, "\\|")
+    .replace(/\r?\n/g, " ")
+    .trim();
+
+function buildSkillTable(files, metadataMap) {
+  const rows = files.map((file) => {
+    const meta = metadataMap.get(file) ?? {};
+    const title = meta.title ? escapeMarkdown(meta.title) : file;
+    const summary = meta.description
+      ? escapeMarkdown(meta.description)
+      : `See references/${file}`;
+    return `| **${title}** (\`references/${file}\`) | ${summary} |`;
+  });
+
+  return ["| Reference | Summary |", "| --- | --- |", ...rows].join("\n");
+}
+
 async function main() {
   try {
     await fs.access(referencesDir);
@@ -58,6 +104,13 @@ async function main() {
   const files = (await collectMarkdownFiles(referencesDir)).sort((a, b) =>
     a.localeCompare(b),
   );
+
+  const metadataByFile = new Map();
+  for (const file of files) {
+    const fullPath = path.join(referencesDir, file);
+    const source = await fs.readFile(fullPath, "utf8");
+    metadataByFile.set(file, parseFrontMatter(source));
+  }
 
   const relativeSkillPath = path
     .relative(manifestDir, skillPath)
@@ -100,6 +153,28 @@ ${referenceContentObject}
 };
 `;
   await fs.writeFile(manifestPath, content, "utf8");
+
+  const skillDocument = await fs.readFile(skillPath, "utf8");
+  const skillTable = buildSkillTable(files, metadataByFile);
+  const startIndex = skillDocument.indexOf(SKILL_TABLE_START);
+  const endIndex = skillDocument.indexOf(SKILL_TABLE_END);
+
+  if (startIndex === -1 || endIndex === -1) {
+    throw new Error(
+      `SKILL.md is missing ${SKILL_TABLE_START} or ${SKILL_TABLE_END} markers`,
+    );
+  }
+
+  const startInsertIndex = startIndex + SKILL_TABLE_START.length;
+  const updatedSkill = `${skillDocument
+    .slice(0, startInsertIndex)
+    .trimEnd()}
+
+${skillTable}
+
+${skillDocument.slice(endIndex)}`;
+
+  await fs.writeFile(skillPath, updatedSkill, "utf8");
 
   console.log(`Updated reference manifest with ${files.length} entries.`);
 }

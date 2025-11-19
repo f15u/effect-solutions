@@ -1,5 +1,6 @@
 ---
 title: Error Handling
+description: "Schema.TaggedError modeling, pattern matching, and defects"
 order: 6
 ---
 
@@ -65,12 +66,22 @@ class NotFoundError extends Schema.TaggedError<NotFoundError>()("NotFoundError",
 
 type AppError = ValidationError | NotFoundError
 
-const handleError = (error: AppError) =>
+// Pattern 1: Match.value - inline matching
+const handleErrorInline = (error: AppError) =>
   Match.value(error).pipe(
     Match.tag("ValidationError", (e) => `Validation failed: ${e.description}`),
     Match.tag("NotFoundError", (e) => `${e.resource} with id ${e.id} not found`),
     Match.exhaustive
   )
+
+// Pattern 2: Match.type - extract matcher (compiled once, reusable)
+const errorMatcher = Match.type<AppError>().pipe(
+  Match.tag("ValidationError", (e) => `Validation failed: ${e.description}`),
+  Match.tag("NotFoundError", (e) => `${e.resource} with id ${e.id} not found`),
+  Match.exhaustive
+)
+
+const handleError = (error: AppError) => errorMatcher(error)
 ```
 
 ## Schema.Defect - Wrapping Unknown Errors

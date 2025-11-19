@@ -8,6 +8,7 @@ import {
 import { codeToHtml } from "shiki";
 import { AsteriskIcon, Sparkle } from "@phosphor-icons/react/dist/ssr";
 import { CalloutAlignedHtml } from "@/components/mdx/CalloutAlignedHtml";
+import { DraftNote } from "@/components/mdx/DraftNote";
 import { FootnoteDefinitions } from "@/components/mdx/FootnoteDefinitions";
 import { FootnoteReference } from "@/components/mdx/FootnoteReference";
 import { MarginAside } from "@/components/mdx/MarginAside";
@@ -153,6 +154,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     ),
     a: MDXLink,
     MarginAside,
+    DraftNote,
     code: CodeBlock,
     pre: ({ children }) => (
       <div className="not-prose text-red-500">{children}</div>

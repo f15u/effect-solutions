@@ -114,7 +114,7 @@ export function ReferenceHeader({
     playHoverSfx();
   }, [playHoverSfx]);
 
-  let displayTitle = "EFFECT BEST PRACTICES";
+  let displayTitle = "EFFECT SOLUTIONS";
 
   const isReferencesPage = pathname === "/references";
 

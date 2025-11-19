@@ -1,5 +1,6 @@
 ---
 title: Configuration
+description: "Effect Config usage, providers, and Live/Test layers"
 order: 7
 ---
 

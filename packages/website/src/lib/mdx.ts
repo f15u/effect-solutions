@@ -8,6 +8,7 @@ export interface ReferenceMetadata {
   title: string;
   description?: string;
   order?: number;
+  draft?: boolean;
 }
 
 export interface Reference extends ReferenceMetadata {
@@ -62,6 +63,7 @@ export function getReferenceBySlug(slug: string): Reference | null {
       title: data.title || slug,
       description: data.description,
       order: data.order,
+      draft: data.draft,
       content: processedContent,
     };
   } catch (_error) {
@@ -74,7 +76,15 @@ export function getAllReferences(): Reference[] {
 
   const references = slugs
     .map((slug) => getReferenceBySlug(slug))
-    .filter((ref): ref is Reference => ref !== null);
+    .filter((ref): ref is Reference => ref !== null)
+    .filter((ref) => {
+      // In production, hide drafts
+      if (process.env.NODE_ENV === "production") {
+        return !ref.draft;
+      }
+      // In development, show all
+      return true;
+    });
 
   return references.sort((a, b) => {
     if (a.order !== undefined && b.order !== undefined) {
