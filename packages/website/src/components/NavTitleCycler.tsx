@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/cn";
 
 interface NavTitleCyclerProps {
@@ -10,29 +11,41 @@ interface NavTitleCyclerProps {
 
 const TITLE_VARIANTS = {
   initial: {
-    y: "100%",
-    opacity: 0,
+    y: -24,
+    opacity: 0.9,
     filter: "blur(6px)",
   },
   animate: {
-    y: "0%",
+    y: 0,
     opacity: 1,
     filter: "blur(0px)",
   },
   exit: {
-    y: "-65%",
-    opacity: 0,
+    y: 24,
+    opacity: 0.9,
     filter: "blur(6px)",
   },
 } as const;
 
 export function NavTitleCycler({ title, className }: NavTitleCyclerProps) {
+  const [renderedTitle, setRenderedTitle] = useState(title);
+  const [animationKey, setAnimationKey] = useState(0);
+
+  useEffect(() => {
+    if (title === renderedTitle) {
+      return;
+    }
+
+    setRenderedTitle(title);
+    setAnimationKey((key) => key + 1);
+  }, [title, renderedTitle]);
+
   return (
     <div className={cn("relative flex-1 min-w-0", className)}>
       <div className="relative overflow-hidden px-1.5 py-1">
         <AnimatePresence initial={false} mode="popLayout">
           <motion.span
-            key={title}
+            key={animationKey}
             layout="position"
             variants={TITLE_VARIANTS}
             initial="initial"
@@ -40,12 +53,12 @@ export function NavTitleCycler({ title, className }: NavTitleCyclerProps) {
             exit="exit"
             transition={{
               type: "spring",
-              stiffness: 320,
-              damping: 32,
+              visualDuration: 0.4,
+              bounce: 0.3,
             }}
             className="block leading-tight will-change-transform"
           >
-            {title}
+            {renderedTitle}
           </motion.span>
         </AnimatePresence>
         <FadeOverlays />

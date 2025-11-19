@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
 import { DOC_LOOKUP, DOCS } from "../../cli/src/docs-manifest";
-import { McpSchema, McpServer } from "@effect/ai";
+import { McpSchema, McpServer, Tool, Toolkit } from "@effect/ai";
 import { BunRuntime, BunSink, BunStream } from "@effect/platform-bun";
 import { Effect, Layer, Schema } from "effect";
 
@@ -47,10 +47,89 @@ const DocsTemplate = McpServer.resource`effect-docs://${docSlugParam}`({
   content: (_uri, slug: string) => lookupDocMarkdown(slug),
 });
 
+// Search tool implementation
+const SearchTool = Tool.make("search_effect_solutions", {
+  description: "Search Effect Solutions documentation by query string. Returns matching docs with relevance scoring.",
+  parameters: {
+    query: Schema.String,
+  },
+  success: Schema.Array(
+    Schema.Struct({
+      slug: Schema.String,
+      title: Schema.String,
+      description: Schema.String,
+      excerpt: Schema.String,
+      score: Schema.Number,
+    })
+  ),
+});
+
+const searchDocs = (query: string) =>
+  Effect.sync(() => {
+    const normalizedQuery = query.toLowerCase().trim();
+    const terms = normalizedQuery.split(/\s+/);
+
+    // Score each doc based on query match
+    const results = DOCS.map((doc) => {
+      const titleLower = doc.title.toLowerCase();
+      const descLower = doc.description.toLowerCase();
+      const bodyLower = doc.body.toLowerCase();
+      const slugLower = doc.slug.toLowerCase();
+
+      let score = 0;
+
+      // Exact phrase match (highest priority)
+      if (titleLower.includes(normalizedQuery)) score += 100;
+      if (descLower.includes(normalizedQuery)) score += 50;
+      if (slugLower.includes(normalizedQuery)) score += 75;
+      if (bodyLower.includes(normalizedQuery)) score += 25;
+
+      // Individual term matches
+      for (const term of terms) {
+        if (titleLower.includes(term)) score += 10;
+        if (descLower.includes(term)) score += 5;
+        if (slugLower.includes(term)) score += 7;
+        if (bodyLower.includes(term)) score += 2;
+      }
+
+      // Find excerpt containing query
+      const excerptLength = 200;
+      let excerpt = doc.description;
+      const queryIndex = bodyLower.indexOf(normalizedQuery);
+      if (queryIndex !== -1) {
+        const start = Math.max(0, queryIndex - 50);
+        const end = Math.min(doc.body.length, queryIndex + excerptLength);
+        excerpt = (start > 0 ? "..." : "") +
+                  doc.body.slice(start, end) +
+                  (end < doc.body.length ? "..." : "");
+      }
+
+      return {
+        slug: doc.slug,
+        title: doc.title,
+        description: doc.description,
+        excerpt: excerpt.trim(),
+        score,
+      };
+    })
+      .filter((result) => result.score > 0)
+      .sort((a, b) => b.score - a.score);
+
+    return results;
+  });
+
+const toolkit = Toolkit.make(SearchTool);
+
+const toolkitLayer = toolkit.toLayer({
+  search_effect_solutions: searchDocs,
+});
+
 const serverLayer = Layer.mergeAll(
   DocsIndexResource,
   DocsTemplate,
+  Layer.effectDiscard(McpServer.registerToolkit(toolkit)),
 ).pipe(
+  Layer.provideMerge(toolkitLayer),
   Layer.provide(
     McpServer.layerStdio({
       name: SERVER_NAME,

@@ -18,6 +18,15 @@
     "publish:cli": "cd packages/cli && bun publish",
     "publish:cli:dry": "cd packages/cli && bun publish --dry-run",
     "publish:cli:alpha": "cd packages/cli && bun publish --tag alpha",
+    "publish:mcp": "cd packages/mcp && bun publish",
+    "publish:mcp:dry": "cd packages/mcp && bun publish --dry-run",
+    "publish:mcp:alpha": "cd packages/mcp && bun publish --tag alpha",
+    "publish:all": "bun run publish:cli && bun run publish:mcp",
+    "publish:all:alpha": "bun run publish:cli:alpha && bun run publish:mcp:alpha",
+    "changeset": "changeset",
+    "release:version": "changeset version",
+    "release:publish": "changeset publish",
+    "release:alpha": "changeset publish --tag alpha",
     "lint": "biome check .",
     "format": "biome format . --write",
     "typecheck": "bunx tsc --build --force",
@@ -31,5 +40,9 @@
     "cmdk": "^1.1.1",
     "effect": "^3.19.4",
     "next-mdx-remote": "^5.0.0"
+  },
+  "devDependencies": {
+    "@changesets/changelog-github": "^0.5.1",
+    "@changesets/cli": "^2.29.7"
   }
 }

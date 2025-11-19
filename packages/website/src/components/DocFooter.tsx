@@ -1,6 +1,10 @@
 "use client";
 
-import { ArrowLeftIcon, ArrowRightIcon, HeartIcon } from "@phosphor-icons/react";
+import {
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  HeartIcon,
+} from "@phosphor-icons/react";
 import { motion } from "motion/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -55,6 +59,11 @@ export function DocFooter({ docTitles, orderedSlugs }: DocFooterProps) {
   }
 
   const currentIndex = orderedSlugs.indexOf(currentSlug);
+  const prevSlug =
+    currentIndex !== -1 && currentIndex > 0
+      ? orderedSlugs[currentIndex - 1]
+      : null;
+  const prevTitle = prevSlug ? docTitles[prevSlug] : null;
   const nextSlug =
     currentIndex !== -1 && currentIndex < orderedSlugs.length - 1
       ? orderedSlugs[currentIndex + 1]
@@ -65,15 +74,27 @@ export function DocFooter({ docTitles, orderedSlugs }: DocFooterProps) {
     <footer className="border-t border-neutral-800 no-prose h-16">
       <div className="max-w-screen-md mx-auto flex items-center justify-between w-full px-6 border-x border-neutral-800 h-full">
         {isDocPage ? (
-          <Link
-            href="/"
-            className="flex items-center gap-3 text-sm font-normal uppercase tracking-wider text-neutral-500 hover:text-neutral-300 no-underline !select-none cursor-default"
-            onMouseEnter={playHoverSfx}
-            onClick={playClickSfx}
-          >
-            <ArrowLeftIcon aria-hidden="true" className="h-5 w-5" />
-            <span className="!select-none">Back to Docs</span>
-          </Link>
+          prevSlug && prevTitle ? (
+            <Link
+              href={`/${prevSlug}`}
+              className="flex items-center gap-3 text-sm font-normal uppercase tracking-wider text-neutral-500 hover:text-neutral-300 no-underline !select-none cursor-default"
+              onMouseEnter={playHoverSfx}
+              onClick={playClickSfx}
+            >
+              <ArrowLeftIcon aria-hidden="true" className="h-5 w-5" />
+              <span className="!select-none">{prevTitle}</span>
+            </Link>
+          ) : (
+            <Link
+              href="/"
+              className="flex items-center gap-3 text-sm font-normal uppercase tracking-wider text-neutral-500 hover:text-neutral-300 no-underline !select-none cursor-default"
+              onMouseEnter={playHoverSfx}
+              onClick={playClickSfx}
+            >
+              <ArrowLeftIcon aria-hidden="true" className="h-5 w-5" />
+              <span className="!select-none">Back to Docs</span>
+            </Link>
+          )
         ) : (
           <div />
         )}
@@ -84,7 +105,7 @@ export function DocFooter({ docTitles, orderedSlugs }: DocFooterProps) {
             onMouseEnter={playHoverSfx}
             onClick={playClickSfx}
           >
-            <span className="!select-none">Next: {nextTitle}</span>
+            <span className="select-none!">{nextTitle}</span>
             <ArrowRightIcon aria-hidden="true" className="h-5 w-5" />
           </Link>
         ) : (
