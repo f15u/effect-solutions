@@ -18,7 +18,7 @@ interface MarginNote {
   content: string;
   anchorId: string;
   offsetY: number;
-  label?: string;
+  label: string | undefined;
 }
 
 interface FootnoteContextValue {
@@ -35,16 +35,16 @@ const FootnoteContext = createContext<FootnoteContextValue | null>(null);
 interface AsideEntry {
   element: HTMLElement;
   content: string;
-  anchorId?: string;
-  label?: string;
+  anchorId: string | undefined;
+  label: string | undefined;
 }
 
 interface RegisterAsidePayload {
   id: string;
   element: HTMLElement | null;
-  content?: string;
-  anchorId?: string;
-  label?: string;
+  content: string | undefined;
+  anchorId: string | undefined;
+  label: string | undefined;
 }
 
 export function FootnoteProvider({ children }: { children: ReactNode }) {
@@ -79,6 +79,7 @@ export function FootnoteProvider({ children }: { children: ReactNode }) {
         content,
         anchorId: reference.id || `fnref-${id}`,
         offsetY: referenceRect.top - articleRect.top,
+        label: undefined,
       });
     }
 

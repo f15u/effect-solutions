@@ -40,7 +40,7 @@ describe("effect-best-practices CLI", () => {
           projectDir,
           ".claude",
           "skills",
-          "effect-best-practices",
+          "effect-solutions",
         );
 
         const skillFile = yield* fs.readFileString(

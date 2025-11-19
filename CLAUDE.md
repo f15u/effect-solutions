@@ -6,7 +6,16 @@ This is a Bun workspace monorepo containing Effect TypeScript best practices doc
 
 - `packages/website/` - Next.js documentation site
 - `packages/cli/` - Effect-based CLI installer for Claude Code skill
-- `references/` - Markdown documentation files (copied to website package)
+- `.github/workflows/` - Automated workflows for keeping documentation accurate
+
+## Living Documentation
+
+This repository uses GitHub Actions to maintain documentation accuracy:
+- **validate-docs.yml** - Daily validation that docs match their source repositories
+- **claude.yml** - Responds to @claude mentions in issues/PRs
+- **claude-code-review.yml** - Automated code review on pull requests
+
+The validation workflow ensures documented setup instructions, commands, and configurations remain accurate as upstream dependencies evolve.
 
 ## Development Commands
 

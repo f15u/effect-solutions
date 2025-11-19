@@ -28,13 +28,17 @@ jobs:
             FOCUS: Check if documented instructions are INCORRECT or OUTDATED.
             DO NOT flag missing features - local docs are intentionally simplified.
 
+            VALIDATION TARGETS:
+            1. Effect Language Service Setup
+               - Local: packages/website/references/01-repo-setup.md
+               - Source: https://raw.githubusercontent.com/Effect-TS/language-service/main/README.md
+
             INSTRUCTIONS:
-            1. Read packages/doc-validator/src/validators.config.ts
-            2. For EACH validationTarget in the config array:
-               a. Read the local doc at {localDocPath}
-               b. Fetch source from https://raw.githubusercontent.com/{sourceRepo}/main/{sourcePath}
-               c. Compare ONLY what's documented locally against source
-            3. If inaccuracies found, create ONE GitHub issue with findings using `gh issue create`
+            For each target:
+            1. Read the local documentation file
+            2. Fetch the source repository documentation
+            3. Compare ONLY what's documented locally against source
+            4. If inaccuracies found, create ONE GitHub issue with ALL findings using `gh issue create`
 
             CHECK FOR (HIGH severity):
             - Installation commands that no longer work or use wrong package names

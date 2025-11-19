@@ -41,9 +41,9 @@ interface WordObject {
   needsSpace: boolean;
 }
 
-const CHARACTER_MOTION_STYLE: CSSProperties = {
+const CHARACTER_MOTION_STYLE = {
   willChange: "transform",
-};
+} as const;
 
 const VerticalCutReveal = forwardRef<VerticalCutRevealRef, TextProps>(
   (

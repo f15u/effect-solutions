@@ -13,12 +13,14 @@ import {
 const CLI_NAME = "effect-solutions";
 const CLI_VERSION = "0.1.0";
 
+const SKILL_ID = "effect-solutions";
+
 const installSkill = (global: boolean) =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
 
-    const skillName = "effect-best-practices";
+    const skillName = SKILL_ID;
     const homeDir = yield* Effect.promise(() => import("node:os")).pipe(
       Effect.map((os) => os.homedir()),
     );
@@ -28,7 +30,7 @@ const installSkill = (global: boolean) =>
       : path.join(path.join(process.cwd()), ".claude", "skills", skillName);
 
     yield* Console.log(
-      `Installing Effect Best Practices skill to ${targetDir}...`,
+      `Installing Effect Solutions skill to ${targetDir}...`,
     );
 
     // Create directories
@@ -45,7 +47,7 @@ const installSkill = (global: boolean) =>
       yield* fs.writeFileString(destination, REFERENCE_CONTENT[ref]);
     }
 
-    yield* Console.log("✓ Effect Best Practices skill installed successfully!");
+    yield* Console.log("✓ Effect Solutions skill installed successfully!");
     yield* Console.log("\nRestart Claude Code to activate the skill.");
   });
 
@@ -56,12 +58,12 @@ const globalOption = Options.boolean("global").pipe(
 
 const installCommand = Command.make("install", { global: globalOption }).pipe(
   Command.withHandler(({ global }) => installSkill(global)),
-  Command.withDescription("Install the Effect Best Practices skill"),
+  Command.withDescription("Install the Effect Solutions skill"),
 );
 
 export const cli = Command.make(CLI_NAME).pipe(
   Command.withSubcommands([installCommand]),
-  Command.withDescription("Effect Best Practices CLI"),
+  Command.withDescription("Effect Solutions CLI"),
 );
 
 export const runCli = (argv: ReadonlyArray<string>) =>
