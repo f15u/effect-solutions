@@ -45,13 +45,13 @@ export class ApiClient extends Context.Tag("@app/ApiClient")<
     Effect.gen(function* () {
       const config = yield* AppConfig
 
-      return ApiClient.of({
-        fetch: (path) => Effect.gen(function* () {
-          const url = `${config.apiUrl}${path}`
-          yield* Effect.log(`Fetching ${url} (timeout: ${config.timeout}ms)`)
-          return `Response from ${url}`
-        })
+      const fetch = Effect.fn("ApiClient.fetch")(function* (path: string) {
+        const url = `${config.apiUrl}${path}`
+        yield* Effect.log(`Fetching ${url} (timeout: ${config.timeout}ms)`)
+        return `Response from ${url}`
       })
+
+      return ApiClient.of({ fetch })
     })
   )
 }
@@ -123,16 +123,16 @@ class UserService extends Context.Tag("@app/UserService")<
       const cache = yield* Cache
       const logger = yield* Logger
 
-      return UserService.of({
-        getUser: (id) => Effect.gen(function* () {
-          yield* logger.log(`Fetching user ${id}`)
-          const cached = yield* cache.get(`user:${id}`)
-          if (cached) return JSON.parse(cached)
+      const getUser = Effect.fn("UserService.getUser")(function* (id: string) {
+        yield* logger.log(`Fetching user ${id}`)
+        const cached = yield* cache.get(`user:${id}`)
+        if (cached) return JSON.parse(cached)
 
-          const result = yield* db.query(`SELECT * FROM users WHERE id = ?`)
-          return result[0]
-        })
+        const result = yield* db.query(`SELECT * FROM users WHERE id = ?`)
+        return result[0]
       })
+
+      return UserService.of({ getUser })
     })
   )
 }
