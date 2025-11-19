@@ -16,28 +16,8 @@ export function CodeCopyButton({ value, className }: CodeCopyButtonProps) {
   const [copied, setCopied] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
-  const [copyWidth, setCopyWidth] = useState(0);
-  const [copiedWidth, setCopiedWidth] = useState(0);
-  const [shouldAnimateWidth, setShouldAnimateWidth] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const contentRef = useRef<HTMLSpanElement>(null);
   const { playTone } = useTonePlayer();
-
-  // Measure width when content is rendered
-  const measureContent = () => {
-    if (contentRef.current) {
-      const width = contentRef.current.scrollWidth + 24; // Add padding (px-3 = 12px * 2)
-      if (copied) {
-        setCopiedWidth(width);
-      } else {
-        setCopyWidth(width);
-      }
-    }
-  };
-
-  useEffect(() => {
-    measureContent();
-  }, [copied]);
 
   useEffect(() => {
     const button = buttonRef.current;
@@ -48,7 +28,6 @@ export function CodeCopyButton({ value, className }: CodeCopyButtonProps) {
 
     const handleMouseEnter = () => {
       setIsVisible(true);
-      setShouldAnimateWidth(false); // Instant on hover
       if (!hovered) {
         playTone({ frequency: 520, duration: 0.06, volume: 0.035 });
         setHovered(true);
@@ -68,16 +47,6 @@ export function CodeCopyButton({ value, className }: CodeCopyButtonProps) {
       parent.removeEventListener("mouseleave", handleMouseLeave);
     };
   }, [hovered, playTone]);
-
-  useEffect(() => {
-    if (isVisible) {
-      // Animate width when copied state changes (on click)
-      setShouldAnimateWidth(true);
-      // Reset animation flag after spring animation completes
-      const timer = setTimeout(() => setShouldAnimateWidth(false), 600);
-      return () => clearTimeout(timer);
-    }
-  }, [copied, isVisible]);
 
   async function handleCopy(event?: MouseEvent<HTMLButtonElement>) {
     event?.preventDefault();
@@ -109,35 +78,28 @@ export function CodeCopyButton({ value, className }: CodeCopyButtonProps) {
 
   return (
     <motion.button
+      layout
       ref={buttonRef}
       type="button"
       className={cn(
-        "pointer-events-auto absolute top-3 right-3 flex items-center border border-neutral-700/80 bg-neutral-950/80 px-3 py-1 text-[0.6rem] font-semibold uppercase tracking-[0.18em] text-neutral-400 overflow-hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-500 hover:text-white hover:border-neutral-500",
+        "pointer-events-auto absolute top-3 right-3 flex items-center border border-neutral-700/80 bg-neutral-950/80 px-3 py-1 text-[0.6rem] font-semibold uppercase tracking-[0.18em] text-neutral-400 overflow-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-500 hover:text-white hover:border-neutral-500",
         copied && "text-emerald-300 border-emerald-400/70",
         className,
       )}
       aria-label="Copy code snippet"
       onClick={handleCopy}
-      initial={{ opacity: 0, width: copyWidth || 0 }}
+      initial={{ opacity: 0 }}
       animate={{
         opacity: isVisible ? 1 : 0,
-        width: isVisible ? (copied ? copiedWidth : copyWidth) : copyWidth,
       }}
       transition={{
         opacity: { duration: 0 },
-        width: shouldAnimateWidth ? springs.nodeWidth : { duration: 0 },
+        layout: springs.nodeWidth,
       }}
       style={{ pointerEvents: isVisible ? "auto" : "none" }}
     >
       <AnimatePresence mode="popLayout" initial={false}>
         <motion.span
-          ref={(el) => {
-            contentRef.current = el;
-            if (el) {
-              // Measure after render
-              setTimeout(() => measureContent(), 0);
-            }
-          }}
           key={copied ? "copied" : "copy"}
           layout
           initial={{ opacity: 0, y: 6 }}
