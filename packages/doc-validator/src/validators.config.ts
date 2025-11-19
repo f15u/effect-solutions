@@ -5,15 +5,15 @@
 
 export interface ValidationTarget {
   /** Name of the validation (used in reports) */
-  name: string
+  name: string;
   /** Path to the local documentation file to validate */
-  localDocPath: string
+  localDocPath: string;
   /** Source repository to compare against */
-  sourceRepo: string
+  sourceRepo: string;
   /** Specific file or section to compare against (optional) */
-  sourcePath?: string
+  sourcePath?: string;
   /** Custom validation prompt (optional) */
-  customPrompt?: string
+  customPrompt?: string;
 }
 
 export const validationTargets: ValidationTarget[] = [
@@ -23,4 +23,4 @@ export const validationTargets: ValidationTarget[] = [
     sourceRepo: "Effect-TS/language-service",
     sourcePath: "README.md",
   },
-]
+];

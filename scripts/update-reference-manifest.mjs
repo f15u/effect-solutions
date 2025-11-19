@@ -6,7 +6,13 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
 const referencesDir = path.join(rootDir, "packages", "website", "references");
-const manifestPath = path.join(rootDir, "packages", "cli", "src", "reference-manifest.ts");
+const manifestPath = path.join(
+  rootDir,
+  "packages",
+  "cli",
+  "src",
+  "reference-manifest.ts",
+);
 const manifestDir = path.dirname(manifestPath);
 const skillPath = path.join(rootDir, "SKILL.md");
 

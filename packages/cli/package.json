@@ -11,7 +11,7 @@
     "build:exe": "bun build src/cli.ts --compile --outfile dist/effect-solutions",
     "prepublishOnly": "rm -rf dist && bun run build && bun run build:exe",
     "dev": "bun src/cli.ts",
-    "prepare": "[ -n \"$CI\" ] || effect-language-service patch"
+    "prepare": "[ -n \"$CI\" ] || bunx effect-language-service patch"
   },
   "files": [
     "dist"

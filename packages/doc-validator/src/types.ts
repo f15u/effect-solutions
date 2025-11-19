@@ -1,27 +1,27 @@
 export interface ValidationResult {
   /** Name of the validation target */
-  targetName: string
+  targetName: string;
   /** Whether validation passed */
-  passed: boolean
+  passed: boolean;
   /** Discrepancies found (if any) */
-  discrepancies: Discrepancy[]
+  discrepancies: Discrepancy[];
   /** Raw findings from Claude */
-  rawFindings?: string
+  rawFindings?: string;
 }
 
 export interface Discrepancy {
   /** Section or topic where discrepancy was found */
-  section: string
+  section: string;
   /** Description of the issue */
-  issue: string
+  issue: string;
   /** Severity level */
-  severity: "high" | "medium" | "low"
+  severity: "high" | "medium" | "low";
   /** Suggested fix (if available) */
-  suggestedFix?: string
+  suggestedFix?: string;
 }
 
 export interface GitHubIssueData {
-  title: string
-  body: string
-  labels?: string[]
+  title: string;
+  body: string;
+  labels?: string[];
 }

@@ -19,7 +19,9 @@ describe("effect-best-practices CLI", () => {
         const originalCwd = process.cwd();
 
         const tempRoot = yield* fs.makeTempDirectory({ prefix: "cli-test" });
-        yield* Effect.addFinalizer(() => fs.remove(tempRoot, { recursive: true }));
+        yield* Effect.addFinalizer(() =>
+          fs.remove(tempRoot, { recursive: true }),
+        );
 
         const projectDir = path.join(tempRoot, "project");
         yield* fs.makeDirectory(projectDir, { recursive: true });
@@ -41,7 +43,9 @@ describe("effect-best-practices CLI", () => {
           "effect-best-practices",
         );
 
-        const skillFile = yield* fs.readFileString(path.join(skillDir, "SKILL.md"));
+        const skillFile = yield* fs.readFileString(
+          path.join(skillDir, "SKILL.md"),
+        );
         expect(skillFile).toBe(SKILL_DOCUMENT);
 
         for (const file of REFERENCE_FILES) {
