@@ -13,7 +13,7 @@
     "dev:mcp": "bun --cwd packages/mcp run dev",
     "build": "bun --filter '*' build",
     "build:website": "bun --cwd packages/website build",
-    "build:cli": "bun --cwd packages/cli build",
+    "build:cli": "cd packages/cli && bun run build:artifacts",
     "build:mcp": "bun --cwd packages/mcp build",
     "generate:manifest": "bun --cwd packages/cli run generate:manifest",
     "generate:og": "cd packages/website && bun run generate:og",

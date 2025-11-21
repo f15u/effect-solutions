@@ -128,6 +128,22 @@ bunx changeset         # Create changeset
 bun release            # Version, build, publish
 ```
 
+### Release flow (tag → CI → publish)
+
+- Tags (`v*`) are created by `bun run version` (Changesets). `bun release` also pushes the tag.
+- Pushing the tag triggers `.github/workflows/release.yml`, which:
+  - installs deps with Bun
+  - builds multi-arch CLI binaries via the package `prepublishOnly` (darwin arm64/x64, linux x64 baseline, linux arm64)
+  - runs `changeset publish` with provenance using `NPM_TOKEN`
+- The CLI npm package now ships a tiny `bin.js` launcher that picks the right binary at install time. A JS bundle remains for environments without a matching native binary.
+
+Manual local publish (fallback):
+
+```bash
+bun run build:cli          # builds manifest + JS + all binaries
+(cd packages/cli && npm publish)
+```
+
 ## Architecture Notes
 
 ### Website

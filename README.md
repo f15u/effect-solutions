@@ -65,6 +65,12 @@ See [effect.solutions](https://www.effect.solutions) for full patterns and ratio
 
 See [CLAUDE.md](./CLAUDE.md) for development details.
 
+## Releasing (tags auto-publish)
+
+1. Apply changesets and bump versions: `bun run version` (creates tag `vX.Y.Z`).
+2. Push the tag/commit to GitHub.
+3. The `Release` workflow builds multi-arch CLI binaries and runs `changeset publish` to publish all packages to npm.
+
 ## Packages
 
 - `effect-solutions` - CLI for local docs
