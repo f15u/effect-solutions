@@ -1,5 +1,11 @@
 # @effect-best-practices/website
 
+## 0.4.1
+
+### Patch Changes
+
+- [`6a6f9ec`](https://github.com/kitlangton/effect-solutions/commit/6a6f9ecc471f25c3a9cc6c253b0dc1c4d16d7de0) Thanks [@kitlangton](https://github.com/kitlangton)! - Fix AudioContext errors and sound queueing issues. Sounds now wait for first user interaction (click/keydown/touch) before playing, preventing console warnings and simultaneous playback of queued sounds. Also fixed negative blur filter values in animations.
+
 ## 0.4.0
 
 ### Minor Changes

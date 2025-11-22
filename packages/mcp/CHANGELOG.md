@@ -1,5 +1,13 @@
 # effect-solutions-mcp
 
+## 0.3.1
+
+### Patch Changes
+
+- [`622f4dc`](https://github.com/kitlangton/effect-solutions/commit/622f4dcfb6e893b4ea0364d13bbbea1b322077a3) Thanks [@kitlangton](https://github.com/kitlangton)! - Stop `tsc --build` from emitting dist test artifacts so `bun test` only runs source tests; also tidy CLI open-issue logging and update notifier typings.
+
+- [`479dc5e`](https://github.com/kitlangton/effect-solutions/commit/479dc5eb5c459aaf0a6f99f0a29ef93cdd72db9c) Thanks [@kitlangton](https://github.com/kitlangton)! - Improve release workflow with OIDC trusted publishing and automatic GitHub releases
+
 ## 0.3.0
 
 ### Minor Changes
