@@ -152,10 +152,10 @@ class Cache extends Context.Tag("@app/Cache")<
 ```
 
 **Layer naming:**
-- All layer properties end with `Layer` suffix
+- All layer properties use camelCase and end with `Layer` suffix
 - Use `layer` for the production implementation
-- Use `mockLayer`, `testLayer`, etc. for test variants
-- Use `liveLayer`, `legacyLayer`, etc. only when multiple production variants exist
+- Use descriptive names for variants: `testLayer`, `mockLayer`, `localLayer`, etc.
+- Avoid `liveLayer` prefix - just use `layer` for the primary implementation
 
 **When to use each constructor:**
 - `Layer.sync()` - synchronous setup, returns service immediately
@@ -166,7 +166,7 @@ class Cache extends Context.Tag("@app/Cache")<
 
 Put layer implementations as static properties using **camelCase** and `.of()` for clarity.
 
-**Tag identifiers must be fully unique** - use a path-like prefix (e.g., `@app/ServiceName` or `app/ServiceName`) to avoid collisions across your application:
+**Tag identifiers must be unique** - use `@app/ServiceName` prefix pattern to avoid collisions:
 
 ```typescript
 import { Config, Context, Effect, Layer, Redacted } from "effect"
@@ -235,8 +235,6 @@ const main = program.pipe(Effect.provide(mainLayer))
 ```
 
 **Naming conventions:**
-- Tag identifiers: `@app/ServiceName` or `app/module/ServiceName` for uniqueness
-- Use `layer` for production layer implementations (lowercase)
-- Use `test` for test layer doubles (lowercase)
-- Use `mock` for mock layer implementations (lowercase)
+- Tag identifiers: Always use `@app/ServiceName` prefix pattern
+- Layer properties: camelCase with `Layer` suffix (`layer`, `testLayer`, `mockLayer`)
 - Always use `.of()` to make it clear what service you're constructing

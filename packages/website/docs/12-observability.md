@@ -18,14 +18,13 @@ bun add @effect/opentelemetry @effect/platform @opentelemetry/api
 ## Send traces + logs to OTLP
 
 ```typescript
-import { Effect } from "effect"
+import { Effect, Layer } from "effect"
 import { BunHttpServer } from "@effect/platform-bun/HttpServer"
 import { HttpServerResponse } from "@effect/platform/HttpServerResponse"
-import * as Tracer from "@effect/opentelemetry/Tracer"
-import * as Otlp from "@effect/opentelemetry/Otlp"
+import { Otlp, Tracer } from "@effect/opentelemetry"
 import { FetchHttpClient } from "@effect/platform/FetchHttpClient"
 
-const OtelLayer = Otlp.layer({
+const otelLayer = Otlp.layer({
   baseUrl: "https://otel-collector.company.dev",
   resource: { serviceName: "effect-app", serviceVersion: "0.1.0" }
 }).pipe(
@@ -39,7 +38,7 @@ const app = HttpServerResponse.text("ok").pipe(
 Effect.runPromise(
   BunHttpServer.serve(app, { port: 3000 }).pipe(
     Tracer.withSpan("server"),
-    Effect.provide(OtelLayer)
+    Effect.provide(otelLayer)
   )
 )
 ```
@@ -53,7 +52,7 @@ Effect.runPromise(
 ## Custom spans inside services
 
 ```typescript
-import { Tracer } from "effect"
+import { Effect } from "effect"
 
 const fetchUser = (id: string) =>
   Effect.gen(function* () {

@@ -39,9 +39,9 @@ describe("math", () => {
 
 ```typescript
 import { layer } from "@effect/vitest"
-import { UserRepo, UserRepoLive } from "../src/UserRepo"
+import { UserRepo, userRepoLayer } from "../src/UserRepo"
 
-layer(UserRepoLive)
+layer(userRepoLayer)
 
 it.scoped("reads from repo", () =>
   Effect.gen(function* () {

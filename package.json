@@ -15,18 +15,12 @@
     "build:website": "bun --cwd packages/website build",
     "build:cli": "cd packages/cli && bun run build:artifacts",
     "build:mcp": "bun --cwd packages/mcp build",
-    "generate:manifest": "bun --cwd packages/cli run generate:manifest",
     "generate:og": "cd packages/website && bun run generate:og",
-    "changeset": "changeset",
-    "changeset:named": "bun scripts/changeset-named.ts",
-    "changeset:empty": "changeset add --empty",
+    "changeset": "bun scripts/changeset-named.ts",
     "version": "changeset version && bun install",
     "release": "GITHUB_TOKEN=$(gh auth token) changeset version && changeset tag && git push --follow-tags",
     "test": "bun test",
-    "lint": "biome check .",
-    "format": "biome format . --write",
-    "typecheck": "bunx tsc --build --force",
-    "check": "bun run lint && bun run typecheck"
+    "check": "biome check . --write && bunx tsc --build --force"
   },
   "dependencies": {
     "@effect/platform": "^0.93.3",

@@ -71,7 +71,7 @@ Effect.runPromise(program.pipe(Effect.provide(TestConfigLayer)))
 ```typescript
 import { Config, Context, Effect, Layer, Redacted } from "effect"
 
-class ApiConfig extends Context.Tag("ApiConfig")<
+class ApiConfig extends Context.Tag("@app/ApiConfig")<
   ApiConfig,
   {
     readonly apiKey: Redacted.Redacted
@@ -223,7 +223,7 @@ Combine provider overrides with dedicated test layers for your config services:
 ```typescript
 import { Config, ConfigProvider, Context, Effect, Layer, Redacted } from "effect"
 
-class ApiConfig extends Context.Tag("ApiConfig")<ApiConfig, { apiKey: Redacted.Redacted }>() {
+class ApiConfig extends Context.Tag("@app/ApiConfig")<ApiConfig, { apiKey: Redacted.Redacted }>() {
   static readonly layer = Layer.effect(
     ApiConfig,
     Effect.gen(function* () {
@@ -292,7 +292,7 @@ const program = Effect.gen(function* () {
 ```typescript
 import { Config, ConfigError, Context, Effect, Layer, Redacted } from "effect"
 
-class DatabaseConfig extends Context.Tag("DatabaseConfig")<
+class DatabaseConfig extends Context.Tag("@app/DatabaseConfig")<
   DatabaseConfig,
   {
     readonly host: string

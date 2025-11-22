@@ -11,38 +11,38 @@ Guidelines for how we structure Effect code: how to express sequencing with `Eff
 ## Effect.gen for Sequential Operations
 
 ```typescript
-import { Effect } from "effect";
+import { Effect } from "effect"
 
-const fetchData = (): Effect.Effect<string> => Effect.succeed("data");
+const fetchData = (): Effect.Effect<string> => Effect.succeed("data")
 const processData = (data: string): Effect.Effect<string> =>
-  Effect.succeed(data.toUpperCase());
-const saveData = (data: string): Effect.Effect<void> => Effect.void;
+  Effect.succeed(data.toUpperCase())
+const saveData = (data: string): Effect.Effect<void> => Effect.void
 
 const program = Effect.gen(function* () {
-  const data = yield* fetchData();
-  const processed = yield* processData(data);
-  return yield* saveData(processed);
-});
+  const data = yield* fetchData()
+  const processed = yield* processData(data)
+  return yield* saveData(processed)
+})
 ```
 
 **Prefer `Effect.gen` over `.pipe` with `flatMap`:**
 
 ```typescript
-import { Effect } from "effect";
+import { Effect } from "effect"
 
-const getA = (): Effect.Effect<number> => Effect.succeed(1);
+const getA = (): Effect.Effect<number> => Effect.succeed(1)
 const getB = (a: number): Effect.Effect<string> =>
-  Effect.succeed(`Result: ${a}`);
+  Effect.succeed(`Result: ${a}`)
 
 // ✅ Good - readable, sequential
 const goodProgram = Effect.gen(function* () {
-  const a = yield* getA();
-  const b = yield* getB(a);
-  return b;
-});
+  const a = yield* getA()
+  const b = yield* getB(a)
+  return b
+})
 
 // ❌ Avoid - nested, harder to read
-const badProgram = getA().pipe(Effect.flatMap((a) => getB(a)));
+const badProgram = getA().pipe(Effect.flatMap((a) => getB(a)))
 ```
 
 ## Effect.fn
@@ -50,32 +50,32 @@ const badProgram = getA().pipe(Effect.flatMap((a) => getB(a)));
 Use `Effect.fn` with generator functions for traced, named effects:
 
 ```typescript
-import { Effect } from "effect";
+import { Effect } from "effect"
 
 interface User {
-  id: string;
-  name: string;
+  id: string
+  name: string
 }
 
 const getUser = Effect.fn("getUser")(function* (userId: string) {
-  return { id: userId, name: "Test User" };
-});
+  return { id: userId, name: "Test User" }
+})
 
 const processData = Effect.fn("processData")(function* (user: User) {
-  return user;
-});
+  return user
+})
 
 const processUser = Effect.fn("processUser")(function* (userId: string) {
-  const user = yield* getUser(userId);
-  const processed = yield* processData(user);
-  return processed;
-});
+  const user = yield* getUser(userId)
+  const processed = yield* processData(user)
+  return processed
+})
 
 // Usage
 const program = Effect.gen(function* () {
-  const result = yield* processUser("user-123");
-  return result;
-});
+  const result = yield* processUser("user-123")
+  return result
+})
 ```
 
 **Benefits:**

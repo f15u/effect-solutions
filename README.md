@@ -35,6 +35,8 @@ bunx effect-solutions-mcp install
 
 **Error handling**
 ```typescript
+import { Effect } from "effect"
+
 Effect.gen(function* () {
   const user = yield* findUser(id).pipe(
     Effect.catchTag("NotFound", () => Effect.succeed(null))
@@ -44,6 +46,9 @@ Effect.gen(function* () {
 
 **HTTP client setup**
 ```typescript
+import { Effect, HttpClient } from "effect"
+import { FetchHttpClient } from "@effect/platform"
+
 const program = Effect.gen(function* () {
   const http = yield* HttpClient.HttpClient
   const result = yield* http.get("/api/users")
@@ -61,9 +66,9 @@ See [effect.solutions](https://www.effect.solutions) for full patterns and ratio
 1. Find a missing pattern or disagree with a recommendation
 2. [Open an issue](https://github.com/kitlangton/effect-solutions/issues/new) to discuss
 3. Submit PR with pattern + tests
-4. Create changeset: `bunx changeset`
+4. Create changeset: `bun scripts/changeset-named.ts "description"`
 
-See [CLAUDE.md](./CLAUDE.md) for development details.
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for details and [CLAUDE.md](./CLAUDE.md) for development workflow.
 
 ## Releasing (tags auto-publish)
 

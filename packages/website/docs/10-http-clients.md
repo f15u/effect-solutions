@@ -18,10 +18,7 @@ bun add @effect/platform
 ## Fetch JSON with Schema validation
 
 ```typescript
-import { Effect, Schema } from "effect"
-import * as HttpClient from "@effect/platform/HttpClient"
-import * as HttpClientRequest from "@effect/platform/HttpClientRequest"
-import * as HttpClientResponse from "@effect/platform/HttpClientResponse"
+import { Effect, HttpClient, HttpClientRequest, HttpClientResponse, Schema } from "effect"
 import { FetchHttpClient } from "@effect/platform/FetchHttpClient"
 
 const User = Schema.Struct({
@@ -53,12 +50,11 @@ await fetchUser.pipe(Effect.provide(FetchHttpClient.layer), Effect.runPromise)
 ## Batching calls with Layers
 
 ```typescript
-import * as Layer from "effect/Layer"
-import * as HttpClient from "@effect/platform/HttpClient"
+import { Effect, HttpClient, HttpClientResponse, Layer, Schema } from "effect"
 import { FetchHttpClient } from "@effect/platform/FetchHttpClient"
 import { AppConfig } from "./AppConfig"
 
-const HttpLive = FetchHttpClient.layer.pipe(Layer.provideMerge(AppConfig.layer))
+const httpLayer = FetchHttpClient.layer.pipe(Layer.provideMerge(AppConfig.layer))
 
 const listUsers = HttpClient.get("https://api.example.com/users").pipe(
   HttpClientResponse.schemaBodyJson(Schema.Array(User))
@@ -67,7 +63,7 @@ const listUsers = HttpClient.get("https://api.example.com/users").pipe(
 const program = Effect.gen(function* () {
   const users = yield* listUsers
   return users.slice(0, 5)
-}).pipe(Effect.provide(HttpLive))
+}).pipe(Effect.provide(httpLayer))
 ```
 
 This keeps HTTP wiring out of your business code and lets CLI and tests share the same typed client.
