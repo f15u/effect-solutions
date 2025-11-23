@@ -98,42 +98,20 @@ Use Effect Solutions CLI before working with Effect code:
 - Apply patterns from docs, don't guess
 ```
 
-## LLM Context Directory
+## Reference Repositories
 
-For repos where you work with AI agents (Claude, Cursor, etc.), use a `.context/` folder pattern:
+We recommend cloning the Effect repository (and other complex dependencies you work with often) locally. Your AI agent can then grep through real source code, patterns, and documentation to resolve complex problems.
 
-- **Track the folder** in git, but **ignore its contents**
-- Clone reference repos here (Effect core, related libraries, etc.) for LLM traversal
-- The LLM can read upstream code/docs without polluting your git history
+Clone it wherever makes sense for you: a dedicated open source directory, or a shared location like `~/.local/share/effect-solutions/effect` (which the agent-guided setup uses to share across projects).
 
-**Setup:**
-
-In `.gitignore`:
-```gitignore
-# Local LLM context (tracked folder, ignored contents)
-.context/*
-!.context/.gitkeep
-```
-
-In `CLAUDE.md` or `AGENTS.md`:
+Once cloned, add a reference in `CLAUDE.md` or `AGENTS.md`:
 ```markdown
-## LLM Context Workspace
+## Local Effect Source
 
-- This repo uses `.context/` for local reference clones
-- Typical entries:
-  - `effect`: main Effect repo
-  - `effect-solutions`: best practices repo
-  - Any app/stack-specific references
-- Tell agents: "Additional code/docs live under `.context/`"
+The Effect repository is cloned to `~/code/opensource/effect` for reference. Use this to explore APIs, find usage examples, and understand implementation details when the documentation isn't enough.
 ```
 
-Then clone reference repos:
-```bash
-cd .context
-git clone https://github.com/Effect-TS/effect.git
-```
-
-This keeps your workspace clean while giving agents access to upstream sources.
+Your agent can now search the actual Effect source code for implementation patterns, API usage examples, and detailed type definitions.
 
 ## TypeScript Configuration
 

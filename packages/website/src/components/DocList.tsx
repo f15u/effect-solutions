@@ -26,7 +26,7 @@ type DocGroup = "Setup" | "Core Patterns" | "Drafts";
 
 const GROUP_DISPLAY_ORDER: DocGroup[] = ["Setup", "Core Patterns", "Drafts"];
 
-const SETUP_SLUGS = new Set(["overview", "project-setup", "tsconfig"]);
+const SETUP_SLUGS = new Set(["quick-start", "project-setup", "tsconfig"]);
 
 const SCROLL_MARGIN_PX = 80; // accounts for sticky header/footer (h-16 = 64px) with a little buffer
 

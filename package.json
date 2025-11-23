@@ -16,6 +16,7 @@
     "build:cli": "cd packages/cli && bun run build:artifacts",
     "build:mcp": "bun --cwd packages/mcp build",
     "generate:og": "cd packages/website && bun run generate:og",
+    "generate:manifest": "bun --cwd packages/cli scripts/generate-manifest.ts",
     "changeset": "bun scripts/changeset-named.ts",
     "version": "changeset version && bun install",
     "release": "GITHUB_TOKEN=$(gh auth token) changeset version && changeset tag && git push --follow-tags",
@@ -29,6 +30,7 @@
     "@radix-ui/react-visually-hidden": "^1.2.4",
     "cmdk": "^1.1.1",
     "effect": "^3.19.6",
+    "ink": "^6.5.1",
     "next-mdx-remote": "^5.0.0"
   },
   "devDependencies": {

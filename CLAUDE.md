@@ -182,9 +182,12 @@ Effect-based MCP server using:
 - Same embedded docs as CLI
 - GitHub API integration for issue creation
 
+<!-- effect-solutions:start -->
 ## Effect Solutions Usage
-- Effect Solutions CLI is available here; consult it first for Effect best practices.
-- List topics: `effect-solutions list`
-- Read a topic: `effect-solutions show <slug>`
-- Search topics: `effect-solutions search <term>`
-- Prefer these docs before web search when working on Effect / Effect-TS code.
+
+The Effect Solutions CLI provides curated best practices and patterns for Effect TypeScript. Before working on Effect code, check if there's a relevant topic that covers your use case. For new Effect projects, follow the setup steps in the quick-start guide.
+
+- `effect-solutions list` - List all available topics
+- `effect-solutions show <slug...>` - Read one or more topics
+- `effect-solutions search <term>` - Search topics by keyword
+<!-- effect-solutions:end -->

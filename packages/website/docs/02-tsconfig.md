@@ -92,22 +92,27 @@ Enables Effect language service for editor diagnostics. For build-time diagnosti
 
 ## Module Settings by Project Type
 
-The key difference between project types is the `module` setting:
+The key difference between project types is the `module` and `moduleResolution` settings:
 
-### Bundled Apps (Vite, Webpack, esbuild)
+### Bundled Apps (Vite, Webpack, esbuild, Rollup)
 
 ```jsonc
 {
   "compilerOptions": {
     "module": "preserve",
+    "moduleResolution": "bundler",
     "noEmit": true
   }
 }
 ```
 
-Use `"module": "preserve"` when a bundler handles module transformation. TypeScript acts as a type-checker only.
+Use `"module": "preserve"` with `"moduleResolution": "bundler"` when a build tool handles module transformation. TypeScript acts as a type-checker only.
 
-### Libraries & Node Apps (Transpiled with tsc)
+- Allows flexible import paths (with or without file extensions)
+- Assumes bundler handles package.json exports/imports
+- Used for frontend apps and any code processed by a bundler
+
+### Libraries & Node.js Apps
 
 ```jsonc
 {
@@ -117,9 +122,15 @@ Use `"module": "preserve"` when a bundler handles module transformation. TypeScr
 }
 ```
 
-Use `"module": "NodeNext"` when TypeScript transpiles your code. Required for:
+Use `"module": "NodeNext"` when TypeScript is your compiler. Required for:
 - npm packages (libraries)
-- Node.js apps without a bundler
+- Node.js apps (including those using Bun or other runtimes)
+- CLI tools
+
+This enforces Node.js module resolution rules:
+- Requires `.js` file extensions in relative imports
+- Respects package.json `"type"` and `"exports"` fields
+- Works with both ESM and CommonJS
 
 **Additional library settings:**
 ```jsonc
@@ -132,4 +143,4 @@ Use `"module": "NodeNext"` when TypeScript transpiles your code. Required for:
 }
 ```
 
-**Rule of thumb:** Bundler compiling? Use `preserve`. TypeScript compiling? Use `NodeNext`.
+**Rule of thumb:** Build tool compiling your code? Use `preserve` + `bundler`. TypeScript compiling your code? Use `NodeNext`.

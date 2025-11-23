@@ -3,7 +3,7 @@ import { getAllDocs } from "@/lib/mdx";
 import { DraftNote } from "./DraftNote";
 
 export function DocTopicsList() {
-  const allDocs = getAllDocs().filter((doc) => doc.slug !== "overview");
+  const allDocs = getAllDocs();
   const publishedDocs = allDocs.filter((doc) => !doc.draft);
   const draftDocs = allDocs.filter((doc) => doc.draft);
 
