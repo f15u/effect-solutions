@@ -1,5 +1,11 @@
 # effect-solutions
 
+## 0.3.3
+
+### Patch Changes
+
+- [`368f3f8`](https://github.com/kitlangton/effect-solutions/commit/368f3f8c01603877c647dc21a02a5f0d1dcf2a3c) Thanks [@kitlangton](https://github.com/kitlangton)! - Improve `list` output formatting with slug/title header and wrapped descriptions for better narrow-terminal readability.
+
 ## 0.3.2
 
 ### Patch Changes
