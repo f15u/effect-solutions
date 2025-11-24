@@ -41,5 +41,10 @@
     "modelcontextprotocol"
   ],
   "author": "Kit Langton",
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kitlangton/effect-solutions.git",
+    "directory": "packages/mcp"
+  }
 }

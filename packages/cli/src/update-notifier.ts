@@ -16,6 +16,21 @@ const isCiLike = () =>
 
 const homeDir = () => process.env.HOME ?? os.homedir();
 
+/**
+ * Compare semver versions. Returns true if `latest` > `current`.
+ */
+export const isNewer = (latest: string, current: string): boolean => {
+  const parseParts = (v: string) =>
+    v.split(".").map((x) => Number.parseInt(x, 10) || 0);
+
+  const [latestMajor, latestMinor, latestPatch] = parseParts(latest);
+  const [currentMajor, currentMinor, currentPatch] = parseParts(current);
+
+  if (latestMajor !== currentMajor) return latestMajor > currentMajor;
+  if (latestMinor !== currentMinor) return latestMinor > currentMinor;
+  return latestPatch > currentPatch;
+};
+
 const cachePath = (pkgName: string) =>
   path.join(homeDir(), ".config", pkgName, "update.json");
 
@@ -83,7 +98,7 @@ export const maybeNotifyUpdate = (pkgName: string, currentVersion: string) =>
     if (Option.isSome(cache)) {
       const cached = cache.value;
       if (cached.nextCheck > now) {
-        if (cached.latest !== currentVersion) {
+        if (isNewer(cached.latest, currentVersion)) {
           yield* logUpdate(currentVersion, cached.latest, pkgName);
         }
         return;
@@ -99,7 +114,7 @@ export const maybeNotifyUpdate = (pkgName: string, currentVersion: string) =>
       nextCheck: now + CHECK_INTERVAL_MS,
     });
 
-    if (latestVersion !== currentVersion) {
+    if (isNewer(latestVersion, currentVersion)) {
       yield* logUpdate(currentVersion, latestVersion, pkgName);
     }
   }).pipe(Effect.catchAll(() => Effect.void));

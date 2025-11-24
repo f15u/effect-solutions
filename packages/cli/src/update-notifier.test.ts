@@ -3,7 +3,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { Effect } from "effect";
-import { maybeNotifyUpdate } from "./update-notifier";
+import { isNewer, maybeNotifyUpdate } from "./update-notifier";
 
 const pkgName = "effect-solutions";
 
@@ -89,5 +89,50 @@ describe("maybeNotifyUpdate (effect)", () => {
     expect(logs).toHaveLength(0);
   });
 
+  test("does not notify when current version is newer than cached", async () => {
+    const nextWeek = Date.now() + 1000 * 60 * 60 * 24 * 7;
+    await mkdir(path.dirname(cachePath(tmpHome)), { recursive: true });
+    await writeFile(
+      cachePath(tmpHome),
+      JSON.stringify({ latest: "0.2.4", nextCheck: nextWeek }),
+      "utf8",
+    );
+
+    await Effect.runPromise(maybeNotifyUpdate(pkgName, "0.3.1"));
+
+    expect(logs).toHaveLength(0);
+  });
+
   // Note: we intentionally avoid mocking fetch because the Effect runtime expects a real Fetch implementation.
+});
+
+describe("isNewer", () => {
+  test("returns true when major version is newer", () => {
+    expect(isNewer("2.0.0", "1.0.0")).toBe(true);
+    expect(isNewer("1.0.0", "2.0.0")).toBe(false);
+  });
+
+  test("returns true when minor version is newer", () => {
+    expect(isNewer("1.2.0", "1.1.0")).toBe(true);
+    expect(isNewer("1.1.0", "1.2.0")).toBe(false);
+  });
+
+  test("returns true when patch version is newer", () => {
+    expect(isNewer("1.0.2", "1.0.1")).toBe(true);
+    expect(isNewer("1.0.1", "1.0.2")).toBe(false);
+  });
+
+  test("returns false when versions are equal", () => {
+    expect(isNewer("1.0.0", "1.0.0")).toBe(false);
+  });
+
+  test("handles the 0.3.1 vs 0.2.4 case correctly", () => {
+    expect(isNewer("0.2.4", "0.3.1")).toBe(false);
+    expect(isNewer("0.3.1", "0.2.4")).toBe(true);
+  });
+
+  test("handles multi-digit version parts", () => {
+    expect(isNewer("1.10.0", "1.9.0")).toBe(true);
+    expect(isNewer("1.9.0", "1.10.0")).toBe(false);
+  });
 });

@@ -304,14 +304,14 @@ export function DocTocSidebar({
             {showDot && (
               <span
                 className={cn(
-                  "block h-[2px] w-[2px] bg-neutral-50",
+                  "block h-[2px] w-[2px] bg-neutral-50 transition-none",
                   isActive ? "opacity-100" : "opacity-60",
                 )}
               />
             )}
             <span
               className={cn(
-                "absolute top-1/2 -translate-y-1/2 px-2 py-1 text-xs text-neutral-100 whitespace-nowrap text-left",
+                "absolute top-1/2 -translate-y-1/2 px-2 py-1 text-xs text-neutral-100 whitespace-nowrap text-left transition-none",
                 isHoveringNearby
                   ? "opacity-40 group-hover:opacity-100"
                   : "opacity-0",
@@ -381,7 +381,6 @@ export function DocTocSidebar({
         style={{
           height: sidebarHeight > 0 ? `${sidebarHeight}px` : "100vh",
           opacity: isHoveringNearby ? 1 : 0.8,
-          transition: "opacity 150ms ease",
         }}
       >
         <div

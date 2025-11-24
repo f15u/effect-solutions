@@ -23,8 +23,8 @@ bun install          # Install dependencies
 bun run dev          # Website dev server
 bun run dev:cli      # CLI dev mode
 bun run dev:mcp      # MCP server dev mode
-bun run check        # Lint & typecheck
-bun run format       # Format code
+bun run check        # Biome (writes), tsc --build, tests
+bun --cwd packages/website run format  # Format website/docs
 bun --cwd packages/website run generate:og  # Rebuild Open Graph images
 ```
 
@@ -36,7 +36,7 @@ The Playwright generator lives at `packages/website/scripts/generate-og.ts` and 
 
 ```bash
 bun scripts/changeset-named.ts "description"  # Create named changeset
-bun release                                    # Version, build, publish all packages
+bun release                                    # Version + tag packages, push tags for CI publish
 ```
 
 **Creating changesets:**
@@ -122,8 +122,8 @@ Configure in Claude Desktop via:
 
 - CLI tests: `bun test packages/cli/src/cli.test.ts`
 - MCP tests: `bun test packages/mcp/src/server.test.ts`
-- Type checking: `bunx tsc --noEmit`
-- Linting: `bunx biome check`
+- Type checking: `bunx tsc --build --force`
+- Linting: `bunx biome check .`
 
 ## Deployment
 
@@ -133,17 +133,17 @@ CLI and MCP packages publish to npm via changesets workflow:
 
 ```bash
 bun scripts/changeset-named.ts "description"  # Create changeset
-bun release                                    # Version, build, publish
+bun release                                    # Version + tag packages, push tags for CI publish
 ```
 
 ### Release flow (tag → CI → publish)
 
-- Tags (`v*`) are created by `bun run version` (Changesets). `bun release` also pushes the tag.
+- Tags (`effect-solutions@*`, `effect-solutions-mcp@*`) are created by `changeset tag` inside `bun release`, which also pushes them.
 - Pushing the tag triggers `.github/workflows/release.yml`, which:
   - installs deps with Bun
   - builds multi-arch CLI binaries via the package `prepublishOnly` (darwin arm64/x64, linux x64 baseline, linux arm64)
   - runs `changeset publish` with provenance using `NPM_TOKEN`
-- The CLI npm package now ships a tiny `bin.js` launcher that picks the right binary at install time. A JS bundle remains for environments without a matching native binary.
+- The CLI npm package ships a tiny `bin.js` launcher that selects a prebuilt binary for supported platforms; unsupported platforms print a helpful error.
 
 Manual local publish (fallback):
 

@@ -6,10 +6,7 @@ order: 2
 
 # TypeScript Configuration
 
-Effect projects benefit from strict TypeScript configuration. Reference configuration from Effect v4 (effect-smol):
-
-**Example config:**
-[effect-smol tsconfig.base.jsonc](https://github.com/Effect-TS/effect-smol/blob/main/tsconfig.base.jsonc)
+Effect projects benefit from strict TypeScript configuration.
 
 ## Key Settings Explained
 
