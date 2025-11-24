@@ -154,22 +154,6 @@ sendEmail(email)
 // const bad: UserId = "raw-string" // Can't assign raw string to branded type
 ```
 
-**Why brand everything?**
-
-- Prevents subtle bugs (passing email where username expected)
-- Self-documenting code (function signatures reveal intent)
-- Validation at boundaries (Schema.decode enforces rules once)
-- Refactoring safety (rename `Email` → `EmailAddress` catches all uses)
-- Beautiful domain model (types match business concepts)
-
-## Pattern Summary
-
-1. **Composite types**: `Schema.Class` with `.make()`
-2. **Unions**: `Schema.Literal()` for simple enums, `Schema.TaggedClass()` + `Schema.Union()` for complex variants
-3. **IDs**: Branded types with `Schema.brand()`
-4. **Compose**: Use branded IDs inside schema classes
-5. **Never**: Use plain strings for IDs or raw TypeScript types for models
-
 ## JSON Encoding & Decoding
 
 Use `Schema.parseJson` to parse JSON strings and validate them with your schema in one step. This combines `JSON.parse` + `Schema.decodeUnknown` for decoding, and `JSON.stringify` + `Schema.encode` for encoding:
@@ -208,5 +192,3 @@ const program = Effect.gen(function* () {
   return json
 })
 ```
-
-Having a single source of truth means every boundary (HTTP handlers, CLI arguments, file IO) can reuse the same schema for both validation and serialization.

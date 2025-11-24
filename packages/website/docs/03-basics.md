@@ -56,4 +56,61 @@ const processUser = Effect.fn("processUser")(function* (userId: string) {
 - Stack traces with location details
 - Clean signatures
 
-**Note:** `Effect.fn` automatically creates spans that integrate with telemetry systems. <!-- When using OpenTelemetry, these spans appear in your traces. See [Observability](/observability) for details. -->
+**Note:** `Effect.fn` automatically creates spans that integrate with telemetry systems. {/* When using OpenTelemetry, these spans appear in your traces. See [Observability](/observability) for details. */}
+
+## Pipe for Instrumentation
+
+Use `.pipe()` to add cross-cutting concerns to Effect values. Common uses: timeouts, retries, logging, and annotations.
+
+```typescript
+import { Effect, Schedule } from "effect"
+// hide-start
+declare const fetchData: Effect.Effect<string>
+// hide-end
+
+const program = fetchData.pipe(
+  Effect.timeout("5 seconds"),
+  Effect.retry(Schedule.exponential("100 millis").pipe(Schedule.compose(Schedule.recurs(3)))),
+  Effect.tap((data) => Effect.logInfo(`Fetched: ${data}`)),
+  Effect.withSpan("fetchData")
+)
+```
+
+**Common instrumentation:**
+
+- `Effect.timeout` - fail if effect takes too long
+- `Effect.retry` - retry on failure with a schedule
+- `Effect.tap` - run side effect without changing the value
+- `Effect.withSpan` - add tracing span
+
+## Retry and Timeout
+
+For production code, combine retry and timeout to handle transient failures:
+
+```typescript
+import { Effect, Schedule } from "effect"
+// hide-start
+declare const callExternalApi: Effect.Effect<string>
+// hide-end
+
+// Retry with exponential backoff, max 3 attempts
+const retryPolicy = Schedule.exponential("100 millis").pipe(
+  Schedule.compose(Schedule.recurs(3))
+)
+
+const resilientCall = callExternalApi.pipe(
+  // Timeout each individual attempt
+  Effect.timeout("2 seconds"),
+  // Retry failed attempts
+  Effect.retry(retryPolicy),
+  // Overall timeout for all attempts
+  Effect.timeout("10 seconds")
+)
+```
+
+**Schedule combinators:**
+
+- `Schedule.exponential` - exponential backoff
+- `Schedule.recurs` - limit number of retries
+- `Schedule.spaced` - fixed delay between retries
+- `Schedule.compose` - combine schedules (both must continue)

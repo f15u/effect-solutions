@@ -1,6 +1,6 @@
 import { describe, it } from "@effect/vitest";
 import { strictEqual } from "@effect/vitest/utils";
-import { Effect } from "effect";
+import { Effect, Fiber, Schedule, TestClock } from "effect";
 
 describe("03-basics", () => {
   describe("Effect.gen", () => {
@@ -126,6 +126,99 @@ describe("03-basics", () => {
 
         strictEqual(result1, 15);
         strictEqual(result2, 10);
+      }),
+    );
+  });
+
+  describe("Pipe for Instrumentation", () => {
+    it.effect("adds timeout to effects", () =>
+      Effect.gen(function* () {
+        const fast = Effect.succeed("done").pipe(Effect.timeout("1 second"));
+        const result = yield* fast;
+        strictEqual(result, "done");
+      }),
+    );
+
+    it.effect("adds tap for side effects", () =>
+      Effect.gen(function* () {
+        let logged = false;
+        const program = Effect.succeed(42).pipe(
+          Effect.tap(() => Effect.sync(() => (logged = true))),
+        );
+        const result = yield* program;
+        strictEqual(result, 42);
+        strictEqual(logged, true);
+      }),
+    );
+
+    it.effect("chains multiple instrumentations", () =>
+      Effect.gen(function* () {
+        const program = Effect.succeed("data").pipe(
+          Effect.tap((data) => Effect.logInfo(`Got: ${data}`)),
+          Effect.timeout("5 seconds"),
+          Effect.withSpan("myOperation"),
+        );
+        const result = yield* program;
+        strictEqual(result, "data");
+      }),
+    );
+  });
+
+  describe("Retry and Timeout", () => {
+    it.effect("retries on failure with schedule", () =>
+      Effect.gen(function* () {
+        let attempts = 0;
+        const flaky = Effect.suspend(() => {
+          attempts++;
+          if (attempts < 3) return Effect.fail("fail" as const);
+          return Effect.succeed("success");
+        });
+
+        const retryPolicy = Schedule.recurs(5);
+        const result = yield* flaky.pipe(Effect.retry(retryPolicy));
+
+        strictEqual(result, "success");
+        strictEqual(attempts, 3);
+      }),
+    );
+
+    it.effect("exponential backoff with max retries", () =>
+      Effect.gen(function* () {
+        let attempts = 0;
+        const flaky = Effect.suspend(() => {
+          attempts++;
+          if (attempts < 2) return Effect.fail("fail" as const);
+          return Effect.succeed("ok");
+        });
+
+        const retryPolicy = Schedule.exponential("1 millis").pipe(
+          Schedule.compose(Schedule.recurs(3)),
+        );
+
+        const fiber = yield* flaky.pipe(Effect.retry(retryPolicy), Effect.fork);
+        yield* TestClock.adjust("100 millis");
+        const result = yield* Fiber.join(fiber);
+
+        strictEqual(result, "ok");
+        strictEqual(attempts, 2);
+      }),
+    );
+
+    it.effect("timeoutFail fails slow effects", () =>
+      Effect.gen(function* () {
+        const slow = Effect.sleep("1 second").pipe(
+          Effect.as("done"),
+          Effect.timeoutFail({
+            duration: "10 millis",
+            onTimeout: () => "timeout" as const,
+          }),
+        );
+
+        const fiber = yield* slow.pipe(Effect.either, Effect.fork);
+        yield* TestClock.adjust("20 millis");
+        const result = yield* Fiber.join(fiber);
+
+        strictEqual(result._tag, "Left");
       }),
     );
   });

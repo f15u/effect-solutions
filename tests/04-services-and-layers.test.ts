@@ -520,5 +520,260 @@ describe("04-services-and-layers", () => {
         strictEqual(result, "[TEST] Hello");
       }),
     );
+
+    it.effect("Layer.provide satisfies dependencies", () =>
+      Effect.gen(function* () {
+        class Config extends Context.Tag("@app/Config")<
+          Config,
+          { readonly url: string }
+        >() {}
+
+        class Database extends Context.Tag("@app/Database")<
+          Database,
+          { readonly query: () => Effect.Effect<string> }
+        >() {
+          static readonly layer = Layer.effect(
+            Database,
+            Effect.gen(function* () {
+              const config = yield* Config;
+              return { query: () => Effect.succeed(config.url) };
+            }),
+          );
+        }
+
+        // Layer.provide wires up the dependency
+        const DatabaseLive = Database.layer.pipe(
+          Layer.provide(Layer.succeed(Config, { url: "postgres://test" })),
+        );
+
+        const program = Effect.gen(function* () {
+          const db = yield* Database;
+          return yield* db.query();
+        });
+
+        const result = yield* program.pipe(Effect.provide(DatabaseLive));
+        strictEqual(result, "postgres://test");
+      }),
+    );
+
+    it.effect("Layer.provideMerge exposes the provider", () =>
+      Effect.gen(function* () {
+        class Config extends Context.Tag("@app/Config")<
+          Config,
+          { readonly env: string }
+        >() {}
+
+        class Logger extends Context.Tag("@app/Logger")<
+          Logger,
+          { readonly log: () => Effect.Effect<string> }
+        >() {
+          static readonly layer = Layer.effect(
+            Logger,
+            Effect.gen(function* () {
+              const config = yield* Config;
+              return { log: () => Effect.succeed(`[${config.env}]`) };
+            }),
+          );
+        }
+
+        // provideMerge: Logger + Config both available
+        const LoggerWithConfig = Logger.layer.pipe(
+          Layer.provideMerge(Layer.succeed(Config, { env: "test" })),
+        );
+
+        const program = Effect.gen(function* () {
+          const logger = yield* Logger;
+          const config = yield* Config; // Config is also available!
+          const prefix = yield* logger.log();
+          return `${prefix} env=${config.env}`;
+        });
+
+        const result = yield* program.pipe(Effect.provide(LoggerWithConfig));
+        strictEqual(result, "[test] env=test");
+      }),
+    );
+  });
+
+  describe("Providing Layers to Effects", () => {
+    it.effect("provide once at entry point", () =>
+      Effect.gen(function* () {
+        class Config extends Context.Tag("@app/Config")<
+          Config,
+          { readonly name: string }
+        >() {}
+
+        class Logger extends Context.Tag("@app/Logger")<
+          Logger,
+          { readonly info: (msg: string) => Effect.Effect<void> }
+        >() {}
+
+        class App extends Context.Tag("@app/App")<
+          App,
+          { readonly run: () => Effect.Effect<string> }
+        >() {
+          static readonly layer = Layer.effect(
+            App,
+            Effect.gen(function* () {
+              const config = yield* Config;
+              const logger = yield* Logger;
+              return {
+                run: () =>
+                  Effect.gen(function* () {
+                    yield* logger.info("Starting");
+                    return config.name;
+                  }),
+              };
+            }),
+          );
+        }
+
+        const logs: string[] = [];
+
+        // Compose all layers into MainLive
+        const MainLive = App.layer.pipe(
+          Layer.provideMerge(
+            Layer.succeed(Logger, {
+              info: (msg) => Effect.sync(() => void logs.push(msg)),
+            }),
+          ),
+          Layer.provideMerge(Layer.succeed(Config, { name: "TestApp" })),
+        );
+
+        // Program uses services freely
+        const program = Effect.gen(function* () {
+          const app = yield* App;
+          return yield* app.run();
+        });
+
+        // Provide once at the top
+        const result = yield* program.pipe(Effect.provide(MainLive));
+
+        strictEqual(result, "TestApp");
+        strictEqual(logs[0], "Starting");
+      }),
+    );
+  });
+
+  describe("Layer Memoization", () => {
+    it.effect("memoizes layers by reference identity", () =>
+      Effect.gen(function* () {
+        let constructionCount = 0;
+
+        class Expensive extends Context.Tag("@app/Expensive")<
+          Expensive,
+          { readonly id: number }
+        >() {}
+
+        class ServiceA extends Context.Tag("@app/ServiceA")<
+          ServiceA,
+          { readonly getValue: () => Effect.Effect<number> }
+        >() {}
+
+        class ServiceB extends Context.Tag("@app/ServiceB")<
+          ServiceB,
+          { readonly getValue: () => Effect.Effect<number> }
+        >() {}
+
+        // Shared layer as a constant
+        const ExpensiveLive = Layer.effect(
+          Expensive,
+          Effect.sync(() => {
+            constructionCount++;
+            return { id: constructionCount };
+          }),
+        );
+
+        // Both services depend on the same ExpensiveLive reference
+        const ServiceALive = Layer.effect(
+          ServiceA,
+          Effect.gen(function* () {
+            const exp = yield* Expensive;
+            return { getValue: () => Effect.succeed(exp.id) };
+          }),
+        ).pipe(Layer.provide(ExpensiveLive));
+
+        const ServiceBLive = Layer.effect(
+          ServiceB,
+          Effect.gen(function* () {
+            const exp = yield* Expensive;
+            return { getValue: () => Effect.succeed(exp.id) };
+          }),
+        ).pipe(Layer.provide(ExpensiveLive));
+
+        // ExpensiveLive appears twice but same reference = memoized
+        const AppLive = Layer.merge(ServiceALive, ServiceBLive);
+
+        const program = Effect.gen(function* () {
+          const a = yield* ServiceA;
+          const b = yield* ServiceB;
+          const valA = yield* a.getValue();
+          const valB = yield* b.getValue();
+          return { valA, valB, constructionCount };
+        });
+
+        const result = yield* program.pipe(Effect.provide(AppLive));
+
+        // Constructed only once due to memoization
+        strictEqual(result.constructionCount, 1);
+        strictEqual(result.valA, 1);
+        strictEqual(result.valB, 1);
+      }),
+    );
+
+    it.effect("inline layer creation breaks memoization", () =>
+      Effect.gen(function* () {
+        let constructionCount = 0;
+
+        class Shared extends Context.Tag("@app/Shared")<
+          Shared,
+          { readonly id: number }
+        >() {}
+
+        const makeSharedLayer = () =>
+          Layer.effect(
+            Shared,
+            Effect.sync(() => {
+              constructionCount++;
+              return { id: constructionCount };
+            }),
+          );
+
+        class ServiceA extends Context.Tag("@app/ServiceA")<
+          ServiceA,
+          { readonly id: number }
+        >() {}
+
+        class ServiceB extends Context.Tag("@app/ServiceB")<
+          ServiceB,
+          { readonly id: number }
+        >() {}
+
+        // Bad: inline calls create different references
+        const ServiceALive = Layer.effect(
+          ServiceA,
+          Effect.map(Shared, (s) => ({ id: s.id })),
+        ).pipe(Layer.provide(makeSharedLayer())); // new instance
+
+        const ServiceBLive = Layer.effect(
+          ServiceB,
+          Effect.map(Shared, (s) => ({ id: s.id })),
+        ).pipe(Layer.provide(makeSharedLayer())); // another new instance
+
+        const AppLive = Layer.merge(ServiceALive, ServiceBLive);
+
+        const program = Effect.gen(function* () {
+          const a = yield* ServiceA;
+          const b = yield* ServiceB;
+          return { idA: a.id, idB: b.id, constructionCount };
+        });
+
+        const result = yield* program.pipe(Effect.provide(AppLive));
+
+        // Constructed twice because different references
+        strictEqual(result.constructionCount, 2);
+        strictEqual(result.idA, 1);
+        strictEqual(result.idB, 2);
+      }),
+    );
   });
 });

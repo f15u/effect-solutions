@@ -7,7 +7,7 @@
     }
   ],
   "commit": true,
-  "fixed": [],
+  "fixed": [["effect-solutions", "@effect-best-practices/website"]],
   "linked": [],
   "access": "public",
   "baseBranch": "main",

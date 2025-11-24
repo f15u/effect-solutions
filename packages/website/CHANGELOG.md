@@ -1,5 +1,11 @@
 # @effect-best-practices/website
 
+## 0.4.6
+
+### Patch Changes
+
+- Expand docs with retry/timeout, layer providing, and memoization patterns
+
 ## 0.4.5
 
 ### Patch Changes

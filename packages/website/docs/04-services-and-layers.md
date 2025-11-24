@@ -36,8 +36,6 @@ class Logger extends Context.Tag("@app/Logger")<
 >() {}
 ```
 
-**General recommendations:**
-
 - **Tag identifiers must be unique**. Use `@path/to/ServiceName` prefix pattern
 - **Service methods should have no dependencies (`R = never`)**. Dependencies are handled via Layer composition, not through method signatures
 - **Use readonly properties**. Services should not expose mutable state directly
@@ -128,7 +126,7 @@ class Users extends Context.Tag("@app/Users")<
 }
 ```
 
-**Layer naming:** camelCase with `Layer` suffix: `layer`, `testLayer`, `mongoLayer`, etc.
+**Layer naming:** camelCase with `Layer` suffix: `layer`, `testLayer`, `postgresLayer`, `sqliteLayer`, etc.
 
 ## Designing with Services First
 
@@ -291,3 +289,108 @@ class Cache extends Context.Tag("@app/Cache")<
   })
 }
 ```
+
+## Providing Layers to Effects
+
+Use `Effect.provide` once at the top of your application to supply all dependencies. Avoid scattering `provide` calls throughout your codebase.
+
+```typescript
+import { Context, Effect, Layer } from "effect"
+// hide-start
+class Config extends Context.Tag("@app/Config")<Config, { readonly apiKey: string }>() {}
+class Logger extends Context.Tag("@app/Logger")<Logger, { readonly info: (msg: string) => Effect.Effect<void> }>() {}
+class Database extends Context.Tag("@app/Database")<Database, { readonly query: () => Effect.Effect<void> }>() {}
+class UserService extends Context.Tag("@app/UserService")<UserService, { readonly getUser: () => Effect.Effect<void> }>() {}
+declare const configLayer: Layer.Layer<Config>
+declare const loggerLayer: Layer.Layer<Logger>
+declare const databaseLayer: Layer.Layer<Database>
+declare const userServiceLayer: Layer.Layer<UserService, never, Database>
+// hide-end
+
+// Compose all layers into a single app layer
+const appLayer = userServiceLayer.pipe(
+  Layer.provideMerge(databaseLayer),
+  Layer.provideMerge(loggerLayer),
+  Layer.provideMerge(configLayer)
+)
+
+// Your program uses services freely
+const program = Effect.gen(function* () {
+  const users = yield* UserService
+  const logger = yield* Logger
+  yield* logger.info("Starting...")
+  yield* users.getUser()
+})
+
+// Provide once at the entry point
+const main = program.pipe(Effect.provide(appLayer))
+
+Effect.runPromise(main)
+```
+
+**Why provide once at the top?**
+
+- Clear dependency graph: all wiring in one place
+- Easier testing: swap `appLayer` for `testLayer`
+- No hidden dependencies: effects declare what they need via types
+- Simpler refactoring: change wiring without touching business logic
+
+## Layer Memoization
+
+Effect automatically memoizes layers by reference identity. When the same layer instance appears multiple times in your dependency graph, it's constructed only once.
+
+This matters especially for resource-intensive layers like database connection pools. Duplicating a pool means wasted connections and potential connection limit issues:
+
+```typescript
+import { Layer } from "effect"
+// hide-start
+import { Context, Effect } from "effect"
+class SqlClient extends Context.Tag("@app/SqlClient")<SqlClient, { readonly query: (sql: string) => Effect.Effect<unknown[]> }>() {}
+class Postgres { static layer(_: { readonly url: string; readonly poolSize: number }): Layer.Layer<SqlClient> { return Layer.succeed(SqlClient, { query: () => Effect.succeed([]) }) } }
+class UserRepo extends Context.Tag("@app/UserRepo")<UserRepo, {}>() {
+  static readonly layer: Layer.Layer<UserRepo, never, SqlClient> = Layer.succeed(UserRepo, {})
+}
+class OrderRepo extends Context.Tag("@app/OrderRepo")<OrderRepo, {}>() {
+  static readonly layer: Layer.Layer<OrderRepo, never, SqlClient> = Layer.succeed(OrderRepo, {})
+}
+// hide-end
+
+// ❌ Bad: calling the constructor twice creates two connection pools
+const badAppLayer = Layer.merge(
+  UserRepo.layer.pipe(
+    Layer.provide(Postgres.layer({ url: "postgres://localhost/mydb", poolSize: 10 }))
+  ),
+  OrderRepo.layer.pipe(
+    Layer.provide(Postgres.layer({ url: "postgres://localhost/mydb", poolSize: 10 })) // Different reference!
+  )
+)
+// Creates TWO connection pools (20 connections total). Could hit server limits.
+```
+
+**The fix:** Store the layer in a constant first:
+
+```typescript
+import { Layer } from "effect"
+// hide-start
+import { Context, Effect } from "effect"
+class SqlClient extends Context.Tag("@app/SqlClient")<SqlClient, { readonly query: (sql: string) => Effect.Effect<unknown[]> }>() {}
+class Postgres { static layer(_: { readonly url: string; readonly poolSize: number }): Layer.Layer<SqlClient> { return Layer.succeed(SqlClient, { query: () => Effect.succeed([]) }) } }
+class UserRepo extends Context.Tag("@app/UserRepo")<UserRepo, {}>() {
+  static readonly layer: Layer.Layer<UserRepo, never, SqlClient> = Layer.succeed(UserRepo, {})
+}
+class OrderRepo extends Context.Tag("@app/OrderRepo")<OrderRepo, {}>() {
+  static readonly layer: Layer.Layer<OrderRepo, never, SqlClient> = Layer.succeed(OrderRepo, {})
+}
+// hide-end
+
+// ✅ Good: store the layer in a constant
+const postgresLayer = Postgres.layer({ url: "postgres://localhost/mydb", poolSize: 10 })
+
+const goodAppLayer = Layer.merge(
+  UserRepo.layer.pipe(Layer.provide(postgresLayer)),
+  OrderRepo.layer.pipe(Layer.provide(postgresLayer)) // Same reference!
+)
+// Single connection pool (10 connections) shared by both repos
+```
+
+**The rule:** When using parameterized layer constructors, always store the result in a module-level constant before using it in multiple places.
