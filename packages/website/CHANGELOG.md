@@ -1,5 +1,11 @@
 # @effect-best-practices/website
 
+## 0.4.14
+
+### Patch Changes
+
+- [`e382f93`](https://github.com/kitlangton/effect-solutions/commit/e382f938fec1e5b41007afdfb357dad92f46be41) Thanks [@kitlangton](https://github.com/kitlangton)! - terminal-demo-focus-scroll
+
 ## 0.4.13
 
 ### Patch Changes
