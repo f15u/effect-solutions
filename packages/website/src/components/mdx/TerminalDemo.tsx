@@ -28,6 +28,7 @@ import {
 } from "effect";
 import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useLessonSfxHandlers } from "@/lib/useLessonNavSfx";
 
 // =============================================================================
 // Task Schema & Domain
@@ -642,6 +643,7 @@ export function TerminalDemo() {
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const outputRef = useRef<HTMLDivElement>(null);
+  const { handleHover, handleClick: playClickSfx } = useLessonSfxHandlers();
 
   // Cycle through placeholder hints
   useEffect(() => {
@@ -889,12 +891,16 @@ export function TerminalDemo() {
     inputRef.current?.focus();
   }, []);
 
-  const handleReset = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    setHistory([]);
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem(INITIALIZED_KEY);
-  }, []);
+  const handleReset = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      playClickSfx();
+      setHistory([]);
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(INITIALIZED_KEY);
+    },
+    [playClickSfx],
+  );
 
   const beforeCursor = input.slice(0, cursorPos);
   const afterCursor = input.slice(cursorPos);
@@ -913,6 +919,7 @@ export function TerminalDemo() {
           <button
             type="button"
             onClick={handleReset}
+            onMouseEnter={handleHover}
             className="text-xs text-neutral-500 hover:text-neutral-300 transition-colors"
           >
             Reset
