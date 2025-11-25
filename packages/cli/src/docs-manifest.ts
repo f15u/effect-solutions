@@ -12,10 +12,10 @@ import DOC__04 from "../../website/docs/04-services-and-layers.md" with { type: 
 import DOC__05 from "../../website/docs/05-data-modeling.md" with { type: "text" };
 import DOC__06 from "../../website/docs/06-error-handling.md" with { type: "text" };
 import DOC__07 from "../../website/docs/07-config.md" with { type: "text" };
-import DOC__08 from "../../website/docs/08-project-structure.md" with { type: "text" };
-import DOC__09 from "../../website/docs/09-incremental-adoption.md" with { type: "text" };
-import DOC__10 from "../../website/docs/10-http-clients.md" with { type: "text" };
-import DOC__11 from "../../website/docs/11-testing-with-vitest.md" with { type: "text" };
+import DOC__08 from "../../website/docs/08-testing.md" with { type: "text" };
+import DOC__09 from "../../website/docs/09-project-structure.md" with { type: "text" };
+import DOC__10 from "../../website/docs/10-incremental-adoption.md" with { type: "text" };
+import DOC__11 from "../../website/docs/11-http-clients.md" with { type: "text" };
 import DOC__12 from "../../website/docs/12-observability.md" with { type: "text" };
 
 type DocMeta = {
@@ -40,10 +40,10 @@ const RAW_DOCS: ReadonlyArray<RawDoc> = [
   { filename: "05-data-modeling.md", source: DOC__05 },
   { filename: "06-error-handling.md", source: DOC__06 },
   { filename: "07-config.md", source: DOC__07 },
-  { filename: "08-project-structure.md", source: DOC__08 },
-  { filename: "09-incremental-adoption.md", source: DOC__09 },
-  { filename: "10-http-clients.md", source: DOC__10 },
-  { filename: "11-testing-with-vitest.md", source: DOC__11 },
+  { filename: "08-testing.md", source: DOC__08 },
+  { filename: "09-project-structure.md", source: DOC__09 },
+  { filename: "10-incremental-adoption.md", source: DOC__10 },
+  { filename: "11-http-clients.md", source: DOC__11 },
   { filename: "12-observability.md", source: DOC__12 },
 ];
 
