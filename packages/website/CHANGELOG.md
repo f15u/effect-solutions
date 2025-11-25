@@ -1,5 +1,11 @@
 # @effect-best-practices/website
 
+## 0.4.15
+
+### Patch Changes
+
+- [`72dd8fe`](https://github.com/kitlangton/effect-solutions/commit/72dd8feab06c0a2d6ab4722e3609b2ea89bddabc) Thanks [@kitlangton](https://github.com/kitlangton)! - reset-button-sfx
+
 ## 0.4.14
 
 ### Patch Changes
