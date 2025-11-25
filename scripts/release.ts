@@ -37,6 +37,10 @@ async function run() {
     await $`git commit -m "Generate OG images and manifest"`
   }
 
+  // Push commits so changelog plugin can fetch GitHub author info
+  console.log("\n⬆️  Pushing commits...")
+  await $`git push`
+
   console.log("\n🔖 Running changeset version...")
   const token = await $`gh auth token`.text()
   await $`GITHUB_TOKEN=${token.trim()} bunx changeset version`
