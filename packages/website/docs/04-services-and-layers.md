@@ -396,3 +396,9 @@ const goodAppLayer = Layer.merge(
 ```
 
 **The rule:** When using parameterized layer constructors, always store the result in a module-level constant before using it in multiple places.
+
+## A Note on Effect.Service
+
+Effect also provides [`Effect.Service`](https://effect.website/blog/releases/effect/39/#effectservice), which bundles a Tag and default Layer together. It's useful when you have an obvious default implementation.
+
+We focus on `Context.Tag` here because it supports service-driven development: sketching interfaces before implementations. A future Effect version aims to combine both approaches.
