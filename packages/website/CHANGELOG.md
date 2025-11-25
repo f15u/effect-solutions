@@ -1,5 +1,11 @@
 # @effect-best-practices/website
 
+## 0.4.13
+
+### Patch Changes
+
+- [`a1c06ba`](https://github.com/kitlangton/effect-solutions/commit/a1c06ba27f3d07267136df35ae9cabd2fdef9570) Thanks [@kitlangton](https://github.com/kitlangton)! - Add interactive terminal demo for CLI docs. Simulates task manager CLI in browser with localStorage persistence.
+
 ## 0.4.12
 
 ### Patch Changes
