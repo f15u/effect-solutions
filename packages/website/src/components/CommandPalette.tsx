@@ -29,7 +29,7 @@ export function CommandPalette({
       listRef.current?.scrollTo({ top: 0, behavior: "instant" });
     });
     return () => cancelAnimationFrame(frame);
-  }, [search]);
+  }, []);
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -48,7 +48,7 @@ export function CommandPalette({
       setOpen(false);
       router.push(`/${slug}`);
     },
-    [router]
+    [router],
   );
 
   return (
@@ -70,7 +70,10 @@ export function CommandPalette({
               placeholder="Search docs..."
               className="w-full px-4 py-3 text-lg bg-transparent border-none outline-none text-foreground placeholder:text-zinc-500"
             />
-            <Command.List ref={listRef} className="max-h-[60vh] overflow-y-auto border-t border-border p-2">
+            <Command.List
+              ref={listRef}
+              className="max-h-[60vh] overflow-y-auto border-t border-border p-2"
+            >
               <Command.Empty className="py-6 text-center text-zinc-500">
                 No results found.
               </Command.Empty>
@@ -79,7 +82,11 @@ export function CommandPalette({
                 <Command.Item
                   key={doc.slug}
                   value={doc.slug}
-                  keywords={[doc.title, doc.description, ...doc.keywords].filter(Boolean)}
+                  keywords={[
+                    doc.title,
+                    doc.description,
+                    ...doc.keywords,
+                  ].filter(Boolean)}
                   onSelect={handleSelect}
                   className="flex flex-col gap-1 px-3 py-3 cursor-pointer data-[selected='true']:bg-zinc-800/50 text-foreground"
                 >

@@ -10,9 +10,9 @@ import {
   useState,
 } from "react";
 import { cn } from "@/lib/cn";
+import type { DocGroup } from "@/lib/mdx";
 import { useLessonSfxHandlers } from "@/lib/useLessonNavSfx";
 import { EffectOrFooter } from "./EffectOrFooter";
-import type { DocGroup } from "@/lib/mdx";
 
 interface DocListProps {
   docs: Array<{

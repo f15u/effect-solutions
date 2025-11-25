@@ -15,6 +15,7 @@ import { FootnoteReference } from "@/components/mdx/FootnoteReference";
 import { LLMInstructionsButton } from "@/components/mdx/LLMInstructionsButton";
 import { MarginAside } from "@/components/mdx/MarginAside";
 import { MDXLink } from "@/components/mdx/MDXLink";
+import { TerminalDemo } from "@/components/mdx/TerminalDemo";
 import { cn } from "@/lib/cn";
 import { transformerAnnotations } from "@/lib/shiki-transformer-annotations";
 
@@ -243,6 +244,7 @@ export function useMDXComponents(
     MarginAside,
     DraftNote,
     DocTopicsList,
+    TerminalDemo,
     LLMInstructionsButton: instructions
       ? () => <LLMInstructionsButton instructions={instructions} />
       : LLMInstructionsButton,

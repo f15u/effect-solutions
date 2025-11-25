@@ -128,6 +128,18 @@ tasks --help           # Shows available subcommands
 
 Let's build a complete task manager that persists tasks to a JSON file. This combines CLI parsing with services and Schema.
 
+<TerminalDemo />
+
+| Command | Description |
+|---------|-------------|
+| `tasks add <task>` | Add a new task |
+| `tasks list` | List pending tasks |
+| `tasks list --all` | List all tasks including completed |
+| `tasks toggle <id>` | Toggle a task's done status |
+| `tasks clear` | Clear all tasks |
+
+This demo stores tasks in your browser's localStorage. Reload the page and they'll still be there. Use Ctrl+L to clear the screen.
+
 ### The Task Schema
 
 ```typescript
@@ -197,6 +209,7 @@ class TaskRepo extends Context.Tag("TaskRepo")<
     readonly list: (all?: boolean) => Effect.Effect<ReadonlyArray<Task>>
     readonly add: (text: string) => Effect.Effect<Task>
     readonly toggle: (id: TaskId) => Effect.Effect<Option.Option<Task>>
+    readonly clear: () => Effect.Effect<void>
   }
 >() {
   static layer = Layer.effect(
@@ -238,7 +251,11 @@ class TaskRepo extends Context.Tag("TaskRepo")<
         return task
       })
 
-      return { list, add, toggle }
+      const clear = Effect.fn("TaskRepo.clear")(function* () {
+        yield* save(TaskList.empty)
+      })
+
+      return { list, add, toggle, clear }
     })
   )
 }
@@ -304,9 +321,18 @@ const toggleCommand = Command.make("toggle", { id }, ({ id }) =>
   })
 ).pipe(Command.withDescription("Toggle a task's done status"))
 
+// clear
+const clearCommand = Command.make("clear", {}, () =>
+  Effect.gen(function* () {
+    const repo = yield* TaskRepo
+    yield* repo.clear()
+    yield* Console.log("Cleared all tasks.")
+  })
+).pipe(Command.withDescription("Clear all tasks"))
+
 const app = Command.make("tasks", {}).pipe(
   Command.withDescription("A simple task manager"),
-  Command.withSubcommands([addCommand, listCommand, toggleCommand])
+  Command.withSubcommands([addCommand, listCommand, toggleCommand, clearCommand])
 )
 ```
 
@@ -350,6 +376,9 @@ tasks list --all
 
 tasks toggle 1
 # Toggled: Buy milk (pending)
+
+tasks clear
+# Cleared all tasks.
 ```
 
 The tasks persist to `tasks.json`:

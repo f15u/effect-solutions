@@ -7,7 +7,11 @@ const docsDirectory = path.join(process.cwd(), "docs");
 
 export type DocGroup = "Setup" | "Core Patterns" | "Ecosystem";
 
-const VALID_GROUPS: Set<string> = new Set(["Setup", "Core Patterns", "Ecosystem"]);
+const VALID_GROUPS: Set<string> = new Set([
+  "Setup",
+  "Core Patterns",
+  "Ecosystem",
+]);
 
 function parseGroup(group: unknown): DocGroup {
   if (typeof group === "string" && VALID_GROUPS.has(group)) {
