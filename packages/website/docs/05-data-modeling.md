@@ -1,6 +1,6 @@
 ---
 title: Data Modeling
-description: "Schema classes, unions, brands, pattern matching, and JSON serialization"
+description: "Records, variants, brands, pattern matching, and JSON serialization"
 order: 5
 ---
 
@@ -15,7 +15,18 @@ TypeScript's built-in tools for modeling data are limited. Effect's `Schema` lib
 - **Rich domain types**: branded primitives prevent confusion; classes add methods and behavior.
 - **Ecosystem integration**: use the same schema everywhere—RPC, HttpApi, CLI, frontend, backend.
 
-## Schema Classes
+## Foundations
+
+All representable data is composed of two primitives:
+
+- **Records** (AND): a `User` has a name AND an email AND a createdAt
+- **Variants** (OR): a `Result` is a Success OR a Failure
+
+If you come from a functional programming background, records are product types and variants are sum types.
+
+Schema gives you tools for both, plus runtime validation and serialization.
+
+## Records (AND Types)
 
 Use `Schema.Class` for composite data models with multiple fields:
 
@@ -48,9 +59,9 @@ const user = User.make({
 console.log(user.displayName) // "Alice (alice@example.com)"
 ```
 
-## Schema Unions
+## Variants (OR Types)
 
-Use `Schema.Union` for types that can be one of several variants:
+Use `Schema.Literal` for simple string or number alternatives:
 
 ```typescript
 import { Schema } from "effect"
@@ -59,7 +70,7 @@ const Status = Schema.Literal("pending", "active", "completed")
 type Status = typeof Status.Type // "pending" | "active" | "completed"
 ```
 
-For more complex unions with multiple fields per variant, use `Schema.TaggedClass`:
+For structured variants with fields, combine `Schema.TaggedClass` with `Schema.Union`:
 
 ```typescript
 import { Match, Schema } from "effect"
@@ -77,36 +88,19 @@ export class Failure extends Schema.TaggedClass<Failure>()("Failure", {
 export const Result = Schema.Union(Success, Failure)
 export type Result = typeof Result.Type
 
-// Pattern 1: Match.value - inline matching
-const handleResultInline = (result: Result) =>
-  Match.value(result).pipe(
-    Match.tag("Success", ({ value }) => `Got: ${value}`),
-    Match.tag("Failure", ({ error }) => `Error: ${error}`),
-    Match.exhaustive
-  )
-
-// Pattern 2: Match.type - extract matcher (compiled once, better perf)
-const matcher = Match.type<Result>().pipe(
-  Match.tag("Success", ({ value }) => `Got: ${value}`),
-  Match.tag("Failure", ({ error }) => `Error: ${error}`),
-  Match.exhaustive
-)
-
-const handleResult = (result: Result) => matcher(result)
-
-// Pattern 3: Match.tags - handle multiple tags together
-const isOk = Match.type<Result>().pipe(
-  Match.tag("Success", () => true),
-  Match.orElse(() => false)
-)
-
+// Pattern match with Match.valueTags
 const success = Success.make({ value: 42 })
 const failure = Failure.make({ error: "oops" })
 
-handleResult(success) // "Got: 42"
-handleResult(failure) // "Error: oops"
-isOk(success) // true
-isOk(failure) // false
+Match.valueTags(success, {
+  Success: ({ value }) => `Got: ${value}`,
+  Failure: ({ error }) => `Error: ${error}`
+}) // "Got: 42"
+
+Match.valueTags(failure, {
+  Success: ({ value }) => `Got: ${value}`,
+  Failure: ({ error }) => `Error: ${error}`
+}) // "Error: oops"
 ```
 
 **Benefits:**
