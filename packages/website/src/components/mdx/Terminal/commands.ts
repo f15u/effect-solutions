@@ -1,7 +1,14 @@
 import { Args, Command, Options } from "@effect/cli";
 import { Cause, Console, Effect, Exit, Option } from "effect";
 import { TaskId, TaskRepo } from "./domain";
-import { BrowserRuntime, makeConsoleMock } from "./services";
+import {
+  BrowserRuntime,
+  log,
+  MockTerminalLayer,
+  makeMockConsole,
+  TerminalOutput,
+  TerminalOutputLive,
+} from "./services";
 
 // =============================================================================
 // CLI Commands
@@ -16,7 +23,9 @@ const addCommand = Command.make("add", { text: textArg }, ({ text }) =>
   Effect.gen(function* () {
     const repo = yield* TaskRepo;
     const task = yield* repo.add(text);
-    yield* Console.log(`Added task #${task.id}: ${task.text}`);
+    yield* log(
+      `\x1b[32mAdded\x1b[0m task \x1b[36m#${task.id}\x1b[0m: ${task.text}`,
+    );
   }),
 ).pipe(Command.withDescription("Add a new task"));
 
@@ -32,13 +41,14 @@ const listCommand = Command.make("list", { all: allOption }, ({ all }) =>
     const tasks = yield* repo.list(all);
 
     if (tasks.length === 0) {
-      yield* Console.log("No tasks.");
+      yield* log("No tasks.");
       return;
     }
 
     for (const task of tasks) {
-      const status = task.done ? "[x]" : "[ ]";
-      yield* Console.log(`${status} #${task.id} ${task.text}`);
+      const id = `\x1b[36m#${task.id}\x1b[0m`;
+      const status = task.done ? "\x1b[32m[x]\x1b[0m" : "\x1b[90m[ ]\x1b[0m";
+      yield* log(`${id} ${status} ${task.text}`);
     }
   }),
 ).pipe(Command.withDescription("List pending tasks"));
@@ -55,11 +65,13 @@ const toggleCommand = Command.make("toggle", { id: idArg }, ({ id }) =>
     const result = yield* repo.toggle(id);
 
     yield* Option.match(result, {
-      onNone: () => Console.log(`Task #${id} not found`),
-      onSome: (task) =>
-        Console.log(
-          `Toggled: ${task.text} (${task.done ? "done" : "pending"})`,
-        ),
+      onNone: () => log(`\x1b[31mTask \x1b[36m#${id}\x1b[31m not found\x1b[0m`),
+      onSome: (task) => {
+        const status = task.done
+          ? "\x1b[32mdone\x1b[0m"
+          : "\x1b[33mpending\x1b[0m";
+        return log(`\x1b[33mToggled\x1b[0m: ${task.text} (${status})`);
+      },
     });
   }),
 ).pipe(Command.withDescription("Toggle a task's done status"));
@@ -69,7 +81,7 @@ const clearCommand = Command.make("clear", {}, () =>
   Effect.gen(function* () {
     const repo = yield* TaskRepo;
     yield* repo.clear();
-    yield* Console.log("Cleared all tasks.");
+    yield* log("\x1b[33mCleared\x1b[0m all tasks.");
   }),
 ).pipe(Command.withDescription("Clear all tasks"));
 
@@ -129,35 +141,46 @@ export async function runCliCommand(args: string): Promise<CliResult> {
   // Build argv: ["node", "tasks", ...args]
   const argv = ["node", "tasks", ...parseArgs(args)];
 
-  // Create a fresh mock console per command to capture output
+  // Create a fresh output accumulator per command
   const program = Effect.gen(function* () {
-    const { console: mockConsole, getLines } = yield* makeConsoleMock;
-
-    // Use Console.setConsole to properly override the default console
+    // Create mock console and use Console.setConsole to override default
+    const mockConsole = yield* makeMockConsole;
     const consoleLayer = Console.setConsole(mockConsole);
 
+    // Run the CLI command with mock console
     const exit = yield* cli(argv).pipe(
       Effect.provide(consoleLayer),
+      Effect.provide(MockTerminalLayer),
       Effect.exit,
     );
 
-    const lines = yield* getLines();
-    const output = lines.join("\n");
+    // Retrieve output from the accumulator
+    const output = (yield* TerminalOutput.pipe(
+      Effect.flatMap((out) => out.getLines),
+    )).join("\n");
 
     if (Exit.isFailure(exit)) {
-      // Return captured output as error, or extract error from cause
+      // If we have captured output, show it (e.g. help text or errors)
       if (output) {
         return { output, isError: true };
       }
+      // Extract error message from CLI validation errors
       const maybeError = Cause.failureOption(exit.cause);
       if (Option.isSome(maybeError)) {
-        return { output: String(maybeError.value), isError: true };
+        const err = maybeError.value as {
+          error?: { value?: { value?: string } };
+        };
+        const msg = err.error?.value?.value ?? String(maybeError.value);
+        return { output: msg, isError: true };
       }
       return { output: String(exit.cause), isError: true };
     }
 
     return { output, isError: false };
-  });
+  }).pipe(
+    // Provide the terminal output (stateful accumulator)
+    Effect.provide(TerminalOutputLive),
+  );
 
   // Use the managed runtime which has platform and repo layers baked in
   return BrowserRuntime.runPromise(program);

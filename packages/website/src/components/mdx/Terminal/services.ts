@@ -80,62 +80,77 @@ const browserTaskRepoLayer = Layer.effect(
 ).pipe(Layer.provide(BrowserKeyValueStore.layerLocalStorage));
 
 // =============================================================================
-// Mock Console (captures output) - based on Effect's test services
+// Terminal Output Service (line accumulator)
 // =============================================================================
 
-export interface MockConsole extends Console.Console {
-  readonly getLines: () => Effect.Effect<ReadonlyArray<string>>;
-}
+export class TerminalOutput extends Context.Tag("TerminalOutput")<
+  TerminalOutput,
+  {
+    readonly log: (...args: ReadonlyArray<unknown>) => Effect.Effect<void>;
+    readonly getLines: Effect.Effect<ReadonlyArray<string>>;
+  }
+>() {}
 
-const MockConsoleTag = Context.GenericTag<Console.Console, MockConsole>(
-  "effect/Console",
+export const TerminalOutputLive = Layer.effect(
+  TerminalOutput,
+  Effect.gen(function* () {
+    const lines = yield* Ref.make<string[]>([]);
+    return {
+      log: (...args) => Ref.update(lines, (l) => [...l, ...args.map(String)]),
+      getLines: Ref.get(lines),
+    };
+  }),
 );
 
-export const makeConsoleMock = Effect.gen(function* () {
-  const lines = yield* Ref.make<string[]>([]);
-
-  const getLines: MockConsole["getLines"] = () => Ref.get(lines);
-
-  const log: MockConsole["log"] = (...args) =>
-    Ref.update(lines, (l) => [...l, ...args.map(String)]);
-
-  return {
-    console: MockConsoleTag.of({
-      [Console.TypeId]: Console.TypeId,
-      getLines,
-      log,
-      unsafe: globalThis.console,
-      assert: () => Effect.void,
-      clear: Effect.void,
-      count: () => Effect.void,
-      countReset: () => Effect.void,
-      debug: () => Effect.void,
-      dir: () => Effect.void,
-      dirxml: () => Effect.void,
-      error: log, // Also capture errors
-      group: () => Effect.void,
-      groupEnd: Effect.void,
-      info: () => Effect.void,
-      table: () => Effect.void,
-      time: () => Effect.void,
-      timeEnd: () => Effect.void,
-      timeLog: () => Effect.void,
-      trace: () => Effect.void,
-      warn: () => Effect.void,
-    }),
-    getLines,
-  };
-});
+// Helper to log to TerminalOutput
+export const log = (...args: ReadonlyArray<unknown>) =>
+  Effect.flatMap(TerminalOutput, (out) => out.log(...args));
 
 // =============================================================================
 // Mock Platform Services (minimal browser stubs)
 // =============================================================================
 
-// Terminal mock - only implement what we need, others throw UnimplementedError
-const mockTerminalLayer = Layer.mock(Terminal, {
-  columns: Effect.succeed(80),
-  display: (text: string) => Console.log(text),
-});
+// Terminal mock - display goes to our TerminalOutput accumulator
+export const MockTerminalLayer = Layer.effect(
+  Terminal,
+  Effect.gen(function* () {
+    const output = yield* TerminalOutput;
+    return Terminal.of({
+      columns: Effect.succeed(80),
+      display: (text: string) => output.log(text),
+      readLine: Effect.die("readLine not implemented in browser"),
+      readInput: Effect.die("readInput not implemented in browser"),
+    });
+  }),
+);
+
+// Console mock - @effect/cli uses Console.log/error for help and error output
+// Must use Console.setConsole to properly override the default console
+const noop = () => Effect.void;
+export const makeMockConsole = Effect.map(TerminalOutput, (output) =>
+  Console.Console.of({
+    [Console.TypeId]: Console.TypeId,
+    log: (...args) => output.log(...args),
+    error: (...args) => output.log(...args),
+    assert: noop,
+    clear: Effect.void,
+    count: noop,
+    countReset: noop,
+    debug: noop,
+    dir: noop,
+    dirxml: noop,
+    group: noop,
+    groupEnd: Effect.void,
+    info: noop,
+    table: noop,
+    time: noop,
+    timeEnd: noop,
+    timeLog: noop,
+    trace: noop,
+    warn: noop,
+    unsafe: globalThis.console,
+  }),
+);
 
 // FileSystem.layerNoop provides a no-op FileSystem where all operations fail by default
 const mockFileSystemLayer = FileSystem.layerNoop({});
@@ -143,12 +158,8 @@ const mockFileSystemLayer = FileSystem.layerNoop({});
 // Path.layer is a built-in cross-platform Path implementation that works in browsers
 const mockPathLayer = Path.layer;
 
-// Combined browser platform layer
-const browserPlatformLayer = Layer.mergeAll(
-  mockTerminalLayer,
-  mockFileSystemLayer,
-  mockPathLayer,
-);
+// Combined browser platform layer (without Terminal - that needs TerminalOutput)
+const browserPlatformLayer = Layer.mergeAll(mockFileSystemLayer, mockPathLayer);
 
 // Combined layer for all browser services
 const browserLiveLayer = Layer.mergeAll(
@@ -159,4 +170,4 @@ const browserLiveLayer = Layer.mergeAll(
 // Managed runtime with all browser services baked in
 export const BrowserRuntime = ManagedRuntime.make(browserLiveLayer);
 
-export { STORAGE_KEY, INITIALIZED_KEY };
+export { INITIALIZED_KEY, STORAGE_KEY };

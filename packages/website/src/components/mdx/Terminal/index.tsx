@@ -5,6 +5,7 @@ import { BrowserKeyValueStore } from "@effect/platform-browser";
 import { Effect } from "effect";
 import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { GITHUB_REPO_URL } from "@/constants/urls";
 import { useLessonSfxHandlers } from "@/lib/useLessonNavSfx";
 import { AnsiText } from "./ansi";
 import { runCliCommand } from "./commands";
@@ -16,6 +17,8 @@ import {
   nbsp,
   PLACEHOLDER_HINTS,
 } from "./utils";
+
+const TERMINAL_SOURCE_URL = `${GITHUB_REPO_URL}/blob/main/packages/website/src/components/mdx/Terminal/domain.ts`;
 
 // =============================================================================
 // Component
@@ -317,14 +320,29 @@ export function TerminalDemo() {
       >
         <div className="flex items-center justify-between border-b border-neutral-800 px-4 py-2">
           <span className="text-neutral-500">Task Manager</span>
-          <button
-            type="button"
-            onClick={handleReset}
-            onMouseEnter={handleHover}
-            className="text-xs text-neutral-500 hover:text-neutral-300 transition-colors"
-          >
-            Reset
-          </button>
+          <div className="flex items-center gap-3">
+            <a
+              href={TERMINAL_SOURCE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => {
+                e.stopPropagation();
+                playClickSfx();
+              }}
+              onMouseEnter={handleHover}
+              className="text-xs text-neutral-500 hover:text-neutral-300 transition-colors"
+            >
+              Source
+            </a>
+            <button
+              type="button"
+              onClick={handleReset}
+              onMouseEnter={handleHover}
+              className="text-xs text-neutral-500 hover:text-neutral-300 transition-colors"
+            >
+              Reset
+            </button>
+          </div>
         </div>
 
         <div ref={outputRef} className="h-72 overflow-y-auto">
