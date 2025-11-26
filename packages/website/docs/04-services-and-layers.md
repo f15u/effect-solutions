@@ -250,9 +250,47 @@ See [Testing with Vitest](/testing-with-vitest#worked-example-testing-a-service)
 
 ## Sharing Layers in Tests with `it.layer`
 
-`it.layer` constructs a layer once for the entire suite and tears it down after all tests complete. This is useful for expensive resources like database connections; you pay the setup cost once rather than per-test.
+**Default recommendation:** give each test its own layer (provide inside every `it.effect`) so state never leaks. Reach for `it.layer` only when you intentionally want a shared, expensive resource across the suite and are confident tests won't interfere with each other.
 
-Since all tests share the same instance, be mindful that state can leak between tests.
+`it.layer` constructs a layer once for the entire suite and tears it down after all tests complete. This is useful for expensive resources like database connections; you pay the setup cost once rather than per-test. Since all tests share the same instance, state can leak between tests.
+
+Per-test layering (preferred):
+
+```typescript
+import { expect, it } from "@effect/vitest"
+import { Context, Effect, Layer } from "effect"
+
+class Counter extends Context.Tag("@app/Counter")<
+  Counter,
+  { readonly get: () => Effect.Effect<number>; readonly increment: () => Effect.Effect<void> }
+>() {
+  static readonly layer = Layer.sync(Counter, () => {
+    let count = 0
+    return {
+      get: () => Effect.succeed(count),
+      increment: () => Effect.sync(() => void count++),
+    }
+  })
+}
+
+// Each test provides the layer, so each gets its own fresh counter
+it.effect("starts at zero", () =>
+  Effect.gen(function* () {
+    const counter = yield* Counter
+    expect(yield* counter.get()).toBe(0)
+  }).pipe(Effect.provide(Counter.layer)),
+)
+
+it.effect("increments without leaking", () =>
+  Effect.gen(function* () {
+    const counter = yield* Counter
+    yield* counter.increment()
+    expect(yield* counter.get()).toBe(1)
+  }).pipe(Effect.provide(Counter.layer)),
+)
+```
+
+Suite-shared layering (only when you know you need it):
 
 ```typescript
 import { expect, it } from "@effect/vitest"
