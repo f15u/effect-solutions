@@ -808,4 +808,40 @@ describe("04-services-and-layers", () => {
       }),
     );
   });
+
+  describe("it.layer", () => {
+    class Counter extends Context.Tag("@app/Counter")<
+      Counter,
+      {
+        readonly get: () => Effect.Effect<number>;
+        readonly increment: () => Effect.Effect<void>;
+      }
+    >() {
+      static readonly Live = Layer.sync(Counter, () => {
+        let count = 0;
+        return {
+          get: () => Effect.succeed(count),
+          increment: () => Effect.sync(() => void count++),
+        };
+      });
+    }
+
+    it.layer(Counter.Live)("counter", (it) => {
+      it.effect("starts at zero", () =>
+        Effect.gen(function* () {
+          const counter = yield* Counter;
+          strictEqual(yield* counter.get(), 0);
+        }),
+      );
+
+      it.effect("increments", () =>
+        Effect.gen(function* () {
+          const counter = yield* Counter;
+          yield* counter.increment();
+          // State persists: the first test already ran, so count was 0, now it's 1
+          strictEqual(yield* counter.get(), 1);
+        }),
+      );
+    });
+  });
 });

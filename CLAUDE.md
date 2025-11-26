@@ -15,6 +15,10 @@ Effect best practices and patterns for humans and AI agents — https://www.effe
 - **Website**: https://www.effect.solutions
 - **CLI**: `bunx effect-solutions@latest list`
 
+## Local Reference Repos
+
+- Effect core monorepo (source for `@effect/*`, including `@effect/vitest` / `it.layer`): `/Users/kit/code/effectful/repos/effect`
+
 ## Development
 
 ```bash
@@ -56,7 +60,11 @@ Bun workspace with `workspaces: ["packages/*"]`. Effect Language Service configu
 
 ## Design Notes
 
-UI components use hard edges — no border radius (use `rounded-none` or omit rounding).
+UI components use hard edges; no border radius (use `rounded-none` or omit rounding).
+
+## Writing Style
+
+- Avoid em dashes (—). Use semicolons, commas, or separate sentences instead.
 
 ## Documentation Structure
 
